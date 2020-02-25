@@ -41,7 +41,7 @@ def multiply(monster_table, *args):
 
     xp = sum([m.xp for m in monsters])
     avg_cr = sum([m.rating for m in monsters]) / len(monsters)
-    amt = len([m for m in monsters if m.rating > avg_cr])
+    amt = len([m for m in monsters if m.rating >= avg_cr])
 
     if amt == 1: return xp
     if amt == 2: return 1.5 * xp
