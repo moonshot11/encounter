@@ -23,33 +23,28 @@ def setup_args():
     parser.add_argument("--orcs", help="Require orcs", action="store_true")
     parser.add_argument("--use-zero", action="store_true",
             help="Use 0 CR monsters")
-    parser.add_argument("--input-file", default="srd5e_monsters.txt",
+    parser.add_argument("--input-file", default="srd.txt",
             help="The data file with monster information")
-    parser.add_argument("--min-factor", "-mn", default=8, type=float,
-            help="Min mult factor (default: 0.25)")
-    parser.add_argument("--max-factor", "-mx", default=1, type=float,
-            help="Max mult factor (default: 1)")
 
     args = parser.parse_args()
     return args
 
-def multiply(xp, amt):
+def multiply(monsters, *args):
     """Apply multiplier to xp based on number of enemies"""
-    if amt == 0: return 0
+    monsters = list(monsters) + [arg for arg in args]
+    if not monsters:
+        return 0
+
+    xp = sum([m.xp for m in monsters])
+    avg_cr = sum([m.rating for m in monsters]) / len(monsters)
+    amt = len([m for m in monsters if m.rating > avg_cr])
+
     if amt == 1: return xp
     if amt == 2: return 1.5 * xp
     if amt in range(3, 7): return 2 * xp
     if amt in range(7, 11): return 2.5 * xp
     if amt in range(11, 15): return 3 * xp
     return 4 * xp
-
-def pick_random(monsters, floor, ceil):
-    """Get candidates as tuples"""
-    candidates = []
-    for mon in monsters:
-        if floor <= mon.rating <= ceil:
-            candidates.append(mon)
-    return random.choice(candidates)
 
 def calc_target_xp(levels, difficulty):
     """Get target XP from table"""
@@ -117,8 +112,8 @@ if __name__ == "__main__":
     xp_total = 0
     monster_count = 0
 
-    while not (target_xp_flr < multiply(xp_total, monster_count) and
-               multiply(xp_total, monster_count) <= target_xp_ceil):
+    while not (target_xp_flr < multiply(result.keys()) and
+               multiply(result.keys()) <= target_xp_ceil):
         # Add Orcs if specifically required
         if not result and args.orcs:
             winner = orc
@@ -129,7 +124,7 @@ if __name__ == "__main__":
             # Populate candidates and choose who's next
             candidates = []
             for mon in monsters:
-                if multiply(xp_total + mon.xp, monster_count + 1) < target_xp_ceil:
+                if multiply(result.keys(), mon) < target_xp_ceil:
                     candidates.append(mon)
             # If no available creatures, bail
             if not candidates:
@@ -145,7 +140,7 @@ if __name__ == "__main__":
             result[winner] = result.get(winner, 0) + 1
             amt -= 1
             monster_count += 1
-            if multiply(xp_total + winner.xp, monster_count + 1) > target_xp_ceil:
+            if multiply(result.keys(), winner) > target_xp_ceil:
                 break
  
     print()
@@ -155,3 +150,8 @@ if __name__ == "__main__":
         print("{} x{}".format(monster.name, amt))
         total += monster.xp * amt
         count += amt
+    print()
+
+    print(multiply(result.keys()), "XP")
+    print(target_xp_flr, "XP <-- target")
+    print(target_xp_ceil, "XP <-- target")
