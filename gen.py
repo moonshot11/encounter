@@ -26,6 +26,8 @@ def setup_args():
             help="Use 0 CR monsters")
     parser.add_argument("--input-file", default="srd.txt",
             help="The data file with monster information")
+    parser.add_argument("--floor", default=10, type=float,
+            help="The floor factor for picking the next monster")
 
     args = parser.parse_args()
     return args
@@ -129,7 +131,7 @@ if __name__ == "__main__":
             candidates = []
             for mon in monsters:
                 if multiply(result, mon) < target_xp_ceil and \
-                   mon.xp >= (target_xp_ceil - multiply(result)) / 10:
+                   mon.xp >= (target_xp_ceil - multiply(result)) / args.floor:
                     candidates.append(mon)
             # If no available creatures, bail
             if not candidates:
