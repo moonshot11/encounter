@@ -1,0 +1,501 @@
+0 (10 XP)
+Awakened shrub
+Baboon
+Badger
+Bat
+Cat
+Commoner
+Crab
+Crawling claw
+Deer
+Eagle
+Frog
+Giant fire beetle
+Goat
+Hawk
+Homunculus
+Hyena
+Jackal
+Lemure
+Lizard
+Myconid sprout
+Octopus
+Owl
+Quipper
+Rat
+Raven
+Scorpion
+Sea horse
+Shrieker
+Spider
+Vulture
+Weasel
+
+0.125 (25 XP)
+Bandit
+Blood hawk
+Camel
+Cultist
+Flumph
+Flying snake
+Giant crab
+Giant rat
+Giant weasel
+Guard
+Kobold
+Manes
+Mastiff
+Merfolk
+Monodrone
+Mule
+Noble
+Poisonous snake
+Pony
+Slaad tadpole
+Stirge
+Tribal warrior
+Twig blight
+
+0.25 (50 XP)
+Aarakocra
+Acolyte
+Axe beak
+Blink dog
+Boar
+Bullywug
+Constrictor snake
+Draft horse
+Dretch
+Drow
+Duodrone
+Elk
+Flying sword
+Giant badger
+Giant bat
+Giant centipede
+Giant frog
+Giant lizard
+Giant owl
+Giant poisonous snake
+Giant wolf spider
+Goblin
+Grimlock
+Kenku
+Kuo-toa
+Mud mephit
+Needle blight
+Panther
+Pixie
+Pseudodragon
+Pteranodon
+Riding horse
+Skeleton
+Smoke mephit
+Sprite
+Steam mephit
+Swarm of bats
+Swarm of rats
+Swarm of ravens
+Troglodyte
+Violet fungus
+Winged kobold
+Wolf
+Zombie
+
+0.5 (100 XP)
+Ape
+Black bear
+Cockatrice
+Crocodile
+Darkmantle
+Deep gnome
+Dust mephit
+Gas spore
+Giant goat
+Giant sea horse
+Giant wasp
+Gnoll
+Gray ooze
+Hobgoblin
+Ice mephit
+Jackalwere
+Lizardfolk
+Magma mephit
+Magmin
+Myconid adult
+Orc
+Piercer
+Reef shark
+Rust monster
+Sahuagin
+Satyr
+Scout
+Shadow
+Swarm of insects
+Thug
+Tridrone
+Vine blight
+Warhorse
+Warhorse skeleton
+Worg
+
+1 (200 XP)
+Animated armor
+Brass dragon wyrmling
+Brown bear
+Bugbear
+Copper dragon wyrmling
+Death dog
+Dire wolf
+Dryad
+Duergar
+Faerie dragon (young)
+Fire snake
+Ghoul
+Giant eagle
+Giant hyena
+Giant octopus
+Giant spider
+Giant toad
+Giant vulture
+Goblin boss
+Half-ogre
+Harpy
+Hippogriff
+Imp
+Kuo-toa whip
+Lion
+Quadrone
+Quaggoth spore servant
+Quasit
+Scarecrow
+Specter
+Spy
+Swarm of quippers
+Thri-kreen
+Tiger
+Yuan-ti pureblood
+
+2 (450 XP)
+Allosaurus
+Ankheg
+Awakened tree
+Azer
+Bandit captain
+Berserker
+Black dragon wyrmling
+Bronze dragon wyrmling
+Carrion crawler
+Centaur
+Cult fanatic
+Druid
+Ettercap
+Faerie dragon (old)
+Gargoyle
+Gelatinous cube
+Ghast
+Giant boar
+Giant constrictor snake
+Giant elk
+Gibbering mouther
+Githzerai monk
+Gnoll pack lord
+Green dragon wyrmling
+Grick
+Griffon
+Hunter shark
+Intellect devourer
+Lizardfolk shaman
+Merrow
+Mimic
+Minotaur skeleton
+Myconid sovereign
+Nothic
+Ochre jelly
+Ogre
+Ogre zombie
+Orc Eye of Gruumsh
+Orog
+Pegasus
+Pentadrone
+Peryton
+Plesiosaurus
+Polar bear
+Poltergeist (specter)
+Priest
+Quaggoth
+Rhinoceros
+Rug of smothering
+Saber-toothed tiger
+Sahuagin priestess
+Sea hag
+Silver dragon wyrmling
+Spined devil
+Swarm of poisonous snakes
+Wererat
+White dragon wyrmling
+Will-o’-wisp
+
+3 (700 XP)
+Ankylosaurus
+Basilisk
+Bearded devil
+Blue dragon wyrmling
+Bugbear chief
+Displacer beast
+Doppelganger
+Giant scorpion
+Githyanki warrior
+Gold dragon wyrmling
+Green hag
+Grell
+Hell hound
+Hobgoblin captain
+Hook horror
+Killer whale
+Knight
+Kuo-toa monitor
+Manticore
+Minotaur
+Mummy
+Nightmare
+Owlbear
+Phase spider
+Quaggoth thonot
+Spectator
+Veteran
+Water weird
+Werewolf
+Wight
+Winter wolf
+Yeti
+Yuan-ti malison
+
+4 (1,100 XP)
+Banshee
+Black pudding
+Bone naga
+Chuul
+Couatl
+Elephant
+Ettin
+Flameskull
+Ghost
+Gnoll fang of Yeenoghu
+Helmed horror
+Incubus
+Lamia
+Lizard king/queen
+Orc war chief
+Red dragon wyrmling
+Sea hag (in coven)
+Shadow demon
+Succubus
+Wereboar
+Weretiger
+
+5 (1,800 XP)
+Air elemental
+Barbed devil
+Barlgura
+Beholder zombie
+Bulette
+Cambion
+Drow elite warrior
+Earth elemental
+Fire elemental
+Flesh golem
+Giant crocodile
+Giant shark
+Gladiator
+Gorgon
+Green hag (in coven)
+Half-red dragon veteran
+Hill giant
+Mezzoloth
+Night hag
+Otyugh
+Red slaad
+Revenant
+Roper
+Sahuagin baron
+Salamander
+Shambling mound
+Triceratops
+Troll
+Umber hulk
+Unicorn
+Vampire spawn
+Water elemental
+Werebear
+Wraith
+Xorn
+Young remorhaz
+
+6 (2,300 XP)
+Chasme
+Chimera
+Cyclops
+Drider
+Galeb duhr
+Githzerai zerth
+Hobgoblin warlord
+Invisible stalker
+Kuo-toa archpriest
+Mage
+Mammoth
+Medusa
+Vrock
+Wyvern
+Young brass dragon
+Young white dragon
+
+7 (2,900 XP)
+Blue slaad
+Drow mage
+Giant ape
+Grick alpha
+Mind flayer
+Night hag (in coven)
+Oni
+Shield guardian
+Stone giant
+Young black dragon
+Young copper dragon
+Yuan-ti abomination
+
+8 (3,900 XP)
+Assassin
+Chain devil
+Cloaker
+Drow priestess of Lolth
+Fomorian
+Frost giant
+Githyanki knight
+Green slaad
+Hezrou
+Hydra
+Mind flayer arcanist
+Spirit naga
+Tyrannosaurus rex
+Young bronze dragon
+Young green dragon
+
+9 (5,000 XP)
+Abominable yeti
+Bone devil
+Clay golem
+Cloud giant
+Fire giant
+Glabrezu
+Gray slaad
+Nycaloth
+Treant
+Young blue dragon
+Young silver dragon
+
+10 (5,900 XP)
+Aboleth
+Death slaad
+Deva
+Guardian naga
+Stone golem
+Yochlol
+Young gold dragon
+Young red dragon
+
+11 (7,200 XP)
+Behir
+Dao
+Djinni
+Efreeti
+Gynosphinx
+Horned devil
+Marid
+Remorhaz
+Roc
+
+12 (8,400 XP)
+Arcanaloth
+Archmage
+Erinyes
+
+13 (10,000 XP)
+Adult brass dragon
+Adult white dragon
+Beholder (not in lair)
+Nalfeshnee
+Rakshasa
+Storm giant
+Ultroloth
+Vampire
+Young red shadow dragon
+
+14 (11,500 XP)
+Adult black dragon
+Adult copper dragon
+Beholder (in lair)
+Death tyrant (not in lair)
+Ice devil
+
+15 (13,000 XP)
+Adult bronze dragon
+Adult green dragon
+Death tyrant (in lair)
+Mummy lord (not in lair)
+Purple worm
+Vampire (spellcaster)
+Vampire (warrior)
+
+16 (15,000 XP)
+Adult blue dragon
+Adult silver dragon
+Iron golem
+Marilith
+Mummy lord (in lair)
+Planetar
+
+17 (18,000 XP)
+Adult blue dracolich
+Adult gold dragon
+Adult red dragon
+Androsphinx
+Death knight
+Dragon turtle
+Goristro
+
+18 (20,000 XP)
+Demilich (not in lair)
+
+19 (22,000 XP)
+Balor
+
+20 (25,000 XP)
+Ancient brass dragon
+Ancient white dragon
+Demilich (in lair)
+Pit fiend
+
+21 (33,000 XP)
+Ancient black dragon
+Ancient copper dragon
+Lich (not in lair)
+Solar
+
+22 (41,000 XP)
+Ancient bronze dragon
+Ancient green dragon
+Lich (in lair)
+
+23 (50,000 XP)
+Ancient blue dragon
+Ancient silver dragon
+Empyrean
+Kraken
+
+24 (62,000 XP)
+Ancient gold dragon
+Ancient red dragon
+
+30 (155,000 XP)
+Tarrasque
