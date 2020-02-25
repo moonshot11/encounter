@@ -6,9 +6,10 @@ import re
 import sys
 
 class Monster:
-    def __init__(self, name, rating):
+    def __init__(self, name, rating, xp):
         self.name = name
         self.rating = rating
+        self.xp = xp
 
 def setup_args():
     """Setup arguments"""
@@ -50,6 +51,7 @@ def init_data(filename):
     """Read data"""
     monsters = []
     rating = None
+    xp = None
 
     with open(filename, "r") as fin:
         lines = [ln.strip() for ln in fin.readlines()]
@@ -57,15 +59,19 @@ def init_data(filename):
     for line in lines:
         if not line:
             continue
-        if re.search(r"^\.?\d+$", line):
-            rating = 4.0 * float(line)
+        # Search for "CR (N XP)" lines
+        match_obj = re.search(r"^(?:0\.)?(\d+)\s+\((\d+)\s*XP\s*\)$",
+                line.replace(",", ""))
+        if match_obj:
+            rating = 4.0 * float(match_obj.group(1))
+            xp = int(match_obj.group(2))
             continue
-        if rating is None:
+        if rating is None or xp is None:
             continue
         if rating == 0 and not args.use_zero:
             continue
 
-        monsters.append(Monster(line, rating))
+        monsters.append(Monster(line, rating, xp))
 
     return monsters
 
