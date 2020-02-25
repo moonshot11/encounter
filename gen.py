@@ -14,14 +14,18 @@ def setup_args():
     """Setup arguments"""
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("difficulty", help="Sum of players' levels", type=int)
-    parser.add_argument("--max-per-group", "-m", help="Max amt per group",
-        default=8, type=int)
+    parser.add_argument("difficulty", help="Sum of players' levels", type=float)
+    parser.add_argument("--max-per-group", "-m", default=4, type=int,
+            help="Max amt per group")
     parser.add_argument("--orcs", help="Require orcs", action="store_true")
-    parser.add_argument("--use-zero", action="store_true")
-    parser.add_argument("--input-file", default="srd5e_monsters.txt")
-    parser.add_argument("--min-factor", default=6, type=float)
-    parser.add_argument("--max-factor", "-mx", default=1, type=float)
+    parser.add_argument("--use-zero", action="store_true",
+            help="Use 0 CR monsters")
+    parser.add_argument("--input-file", default="srd5e_monsters.txt",
+            help="The data file with monster information")
+    parser.add_argument("--min-factor", "-mn", default=8, type=float,
+            help="Min div CR factor (default: 8)")
+    parser.add_argument("--max-factor", "-mx", default=1, type=float,
+            help="Max div CR factor (default: 1)")
 
     args = parser.parse_args()
     return args
