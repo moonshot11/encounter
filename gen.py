@@ -21,6 +21,7 @@ def setup_args():
     parser.add_argument("--use-zero", action="store_true")
     parser.add_argument("--input-file", default="srd5e_monsters.txt")
     parser.add_argument("--min-factor", default=6, type=float)
+    parser.add_argument("--max-factor", "-mx", default=1, type=float)
 
     args = parser.parse_args()
     return args
@@ -83,7 +84,8 @@ if __name__ == "__main__":
             if difficulty < winner.rating:
                 print("WARNING: Orcs too difficult for this group")
         else:
-            winner = pick_random(monsters, difficulty/args.min_factor, difficulty)
+            winner = pick_random(monsters, difficulty / args.min_factor,
+                    difficulty / args.max_factor)
             amt = random.randint(1, args.max_per_group)
 
         # Remove chosen monster from further candidacy
