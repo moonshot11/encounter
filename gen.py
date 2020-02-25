@@ -29,9 +29,12 @@ def setup_args():
     args = parser.parse_args()
     return args
 
-def multiply(monsters, *args):
+def multiply(monster_table, *args):
     """Apply multiplier to xp based on number of enemies"""
-    monsters = list(monsters) + [arg for arg in args]
+    monsters = list(args)
+    for mon, amt in monster_table.items():
+        for i in range(0, amt):
+            monsters.append(mon)
     if not monsters:
         return 0
 
@@ -112,8 +115,8 @@ if __name__ == "__main__":
     xp_total = 0
     monster_count = 0
 
-    while not (target_xp_flr < multiply(result.keys()) and
-               multiply(result.keys()) <= target_xp_ceil):
+    while not (target_xp_flr < multiply(result) and
+               multiply(result) <= target_xp_ceil):
         # Add Orcs if specifically required
         if not result and args.orcs:
             winner = orc
@@ -124,7 +127,8 @@ if __name__ == "__main__":
             # Populate candidates and choose who's next
             candidates = []
             for mon in monsters:
-                if multiply(result.keys(), mon) < target_xp_ceil:
+                if multiply(result, mon) < target_xp_ceil and \
+                   mon.xp >= (target_xp_ceil - multiply(result)) / 10:
                     candidates.append(mon)
             # If no available creatures, bail
             if not candidates:
@@ -140,7 +144,7 @@ if __name__ == "__main__":
             result[winner] = result.get(winner, 0) + 1
             amt -= 1
             monster_count += 1
-            if multiply(result.keys(), winner) > target_xp_ceil:
+            if multiply(result, winner) > target_xp_ceil:
                 break
  
     print()
@@ -152,6 +156,6 @@ if __name__ == "__main__":
         count += amt
     print()
 
-    print(multiply(result.keys()), "XP")
+    print(multiply(result), "XP")
     print(target_xp_flr, "XP <-- target")
     print(target_xp_ceil, "XP <-- target")
