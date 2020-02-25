@@ -15,9 +15,10 @@ def setup_args():
     """Setup arguments"""
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("difficulty", choices=["easy", "med", "hard", "deadly"],
+            help="Difficulty")
     parser.add_argument("levels",
             help="Space-separated string of player levels")
-    parser.add_argument("difficulty", choices=["easy", "med", "hard", "deadly"])
     parser.add_argument("--max-per-group", "-m", default=4, type=int,
             help="Max amt per group")
     parser.add_argument("--orcs", help="Require orcs", action="store_true")
