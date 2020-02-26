@@ -5,6 +5,14 @@ import random
 import re
 import sys
 
+# avg_player_lvl * MULT_MIN_FACTOR to count in encounter multiplier
+MULT_MIN_FACTOR = 0.5
+# min percentage for this monster's contribution to remaining XP
+NEXT_FLOOR = 0.1
+
+levels = None
+avg_player_lvl = None
+
 class Monster:
     def __init__(self, name, rating, xp):
         self.name = name
@@ -26,8 +34,6 @@ def setup_args():
             help="Use 0 CR monsters")
     parser.add_argument("--input-file", default="srd.txt",
             help="The data file with monster information")
-    parser.add_argument("--floor", default=10, type=float,
-            help="The floor factor for picking the next monster")
 
     args = parser.parse_args()
     return args
@@ -43,16 +49,24 @@ def multiply(monster_table, *args):
 
     xp = sum([m.xp for m in monsters])
     avg_cr = sum([m.rating for m in monsters]) / len(monsters)
-    amt = len([m for m in monsters if m.rating >= avg_cr])
+    amt = len([m for m in monsters if m.rating > avg_player_lvl * MULT_MIN_FACTOR])
 
-    if amt == 1: return xp
-    if amt == 2: return 1.5 * xp
-    if amt in range(3, 7): return 2 * xp
-    if amt in range(7, 11): return 2.5 * xp
-    if amt in range(11, 15): return 3 * xp
-    return 4 * xp
+    if amt <= 1: index = 0
+    elif amt == 2: index = 1
+    elif amt in range(3, 7): index = 2
+    elif amt in range(7, 11): index = 3
+    elif amt in range(11, 15): index = 4
+    else: index = 5
+    
+    if len(levels) <= 2:
+        index = min(index + 1, 5)
+    elif len(levels) >= 6:
+        index = max(index - 1, 0)
 
-def calc_target_xp(levels, difficulty):
+    multipliers = [1, 1.5, 2, 2.5, 3, 4]
+    return multipliers[index] * xp
+
+def calc_target_xp(difficulty):
     """Get target XP from table"""
     diffs = ["easy", "med", "hard", "deadly"]
 
@@ -66,7 +80,7 @@ def calc_target_xp(levels, difficulty):
         targets[line[0]] = line[1:]
 
     total = 0
-    for lvl in levels.split():
+    for lvl in levels:
         total += int(targets[lvl][diffs.index(difficulty)])
 
     return total
@@ -92,7 +106,7 @@ def init_data(filename):
         if not line:
             continue
         # Search for "CR (N XP)" lines
-        match_obj = re.search(r"^(?:0\.)?(\d+)\s+\((\d+)\s*XP\s*\)$",
+        match_obj = re.search(r"^((?:0\.)?\d+)\s+\((\d+)\s*XP\s*\)$",
                 line.replace(",", ""))
         if match_obj:
             rating = float(match_obj.group(1))
@@ -109,9 +123,12 @@ def init_data(filename):
 
 if __name__ == "__main__":
     args = setup_args()
+    levels = args.levels.split()
+    avg_player_lvl = sum([int(x) for x in levels]) / len(levels)
+
     monsters = init_data(args.input_file)
     orc = find_monster(monsters, "Orc")
-    target_xp_ceil = calc_target_xp(args.levels, args.difficulty)
+    target_xp_ceil = calc_target_xp(args.difficulty)
     target_xp_flr = target_xp_ceil * 0.9
 
     result = {}
@@ -130,8 +147,9 @@ if __name__ == "__main__":
             # Populate candidates and choose who's next
             candidates = []
             for mon in monsters:
-                if multiply(result, mon) < target_xp_ceil and \
-                   mon.xp >= (target_xp_ceil - multiply(result)) / args.floor:
+                if multiply(result, mon) <= target_xp_ceil and \
+                   multiply(result, mon) - multiply(result) >= (target_xp_ceil - multiply(result)) * NEXT_FLOOR and \
+                   mon.rating <= avg_player_lvl:
                     candidates.append(mon)
             # If no available creatures, bail
             if not candidates:
