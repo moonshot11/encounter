@@ -1,6 +1,7 @@
 #!/d/Python37/python
 
 import argparse
+import csv
 import random
 import re
 import sys
@@ -13,11 +14,45 @@ NEXT_FLOOR = 0.1
 levels = None
 avg_player_lvl = None
 
+cr_to_xp = {
+    0 : 10,
+    0.125 : 25,
+    0.25 : 50,
+    0.5 : 100,
+    1 : 200,
+    2 : 450,
+    3 : 700,
+    4 : 1100,
+    5 : 1800,
+    6 : 2300,
+    7 : 2900,
+    8 : 3900,
+    9 : 5000,
+    10 : 5900,
+    11 : 7200,
+    12 : 8400,
+    13 : 10000,
+    14 : 11500,
+    15 : 13300,
+    16 : 15000,
+    17 : 18000,
+    19 : 22000,
+    20 : 25000,
+    21 : 33000,
+    22 : 41000,
+    23 : 50000,
+    24 : 62000,
+    30 : 155000
+}
+
 class Monster:
-    def __init__(self, name, rating, xp):
+    def __init__(self, name, rating, stats):
         self.name = name
-        self.rating = rating
-        self.xp = xp
+        self.rating = float(rating)
+        self.xp = cr_to_xp[self.rating]
+
+        (self.str, self.dex, self.con, self.int, self.wis, self.cha) = \
+        [int(s) for s in stats]
 
 def setup_args():
     """Setup arguments"""
@@ -32,7 +67,7 @@ def setup_args():
     parser.add_argument("--orcs", help="Require orcs", action="store_true")
     parser.add_argument("--use-zero", action="store_true",
             help="Use 0 CR monsters")
-    parser.add_argument("--input-file", default="srd.txt",
+    parser.add_argument("--input-file", default="srd.csv",
             help="The data file with monster information")
 
     args = parser.parse_args()
@@ -96,26 +131,13 @@ def find_monster(monsters, name):
 def init_data(filename):
     """Read data"""
     monsters = []
-    rating = None
-    xp = None
 
     with open(filename, "r") as fin:
-        lines = [ln.strip() for ln in fin.readlines()]
-
-    for line in lines:
-        if not line:
-            continue
-        # Search for "CR (N XP)" lines
-        match_obj = re.search(r"^((?:0\.)?\d+)\s+\((\d+)\s*XP\s*\)$",
-                line.replace(",", ""))
-        if match_obj:
-            rating = float(match_obj.group(1))
-            xp = int(match_obj.group(2))
-            continue
-        if rating is None or xp is None:
-            continue
-
-        monsters.append(Monster(line, rating, xp))
+        reader = csv.DictReader(fin)
+        for line in reader:
+            monsters.append(Monster(line['Name'], line['CR'],
+                [line['STR'], line['DEX'], line['CON'],
+                 line['INT'], line['WIS'], line['CHA']]))
 
     return monsters
 

@@ -58,7 +58,7 @@ Boar
 Constrictor Snake
 Draft Horse
 Dretch
-Elf, Drow
+Drow Elf
 Elk
 Flying Sword
 Giant Badger
@@ -86,7 +86,7 @@ Zombie
 0.5 (100 XP)
 
 Ape
-Black bear
+Black Bear
 Cockatrice
 Crocodile
 Darkmantle
