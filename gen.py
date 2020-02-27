@@ -25,7 +25,7 @@ def setup_args():
 
     parser.add_argument("difficulty", choices=["easy", "med", "hard", "deadly"],
             help="Difficulty")
-    parser.add_argument("levels",
+    parser.add_argument("levels", nargs="*", type=int,
             help="Space-separated string of player levels")
     parser.add_argument("--max-per-group", "-m", default=4, type=int,
             help="Max amt per group")
@@ -77,7 +77,7 @@ def calc_target_xp(difficulty):
     targets = {}
     for line in lines:
         line = line.split(",")
-        targets[line[0]] = line[1:]
+        targets[int(line[0])] = line[1:]
 
     total = 0
     for lvl in levels:
@@ -114,8 +114,6 @@ def init_data(filename):
             continue
         if rating is None or xp is None:
             continue
-        if rating == 0 and not args.use_zero:
-            continue
 
         monsters.append(Monster(line, rating, xp))
 
@@ -123,7 +121,7 @@ def init_data(filename):
 
 if __name__ == "__main__":
     args = setup_args()
-    levels = args.levels.split()
+    levels = args.levels
     avg_player_lvl = sum([int(x) for x in levels]) / len(levels)
 
     monsters = init_data(args.input_file)
