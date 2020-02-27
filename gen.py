@@ -48,8 +48,8 @@ def multiply(monster_table, *args):
         return 0
 
     xp = sum([m.xp for m in monsters])
-    avg_cr = sum([m.rating for m in monsters]) / len(monsters)
-    amt = len([m for m in monsters if m.rating > avg_player_lvl * MULT_MIN_FACTOR])
+    max_cr = max([m.rating for m in monsters])
+    amt = len([m for m in monsters if m.rating > max_cr * MULT_MIN_FACTOR])
 
     if amt <= 1: index = 0
     elif amt == 2: index = 1
