@@ -147,11 +147,18 @@ if __name__ == "__main__":
             for mon in monsters:
                 if multiply(result, mon) <= target_xp_ceil and \
                    multiply(result, mon) - multiply(result) >= (target_xp_ceil - multiply(result)) * NEXT_FLOOR and \
-                   mon.rating <= avg_player_lvl:
+                   mon.rating <= avg_player_lvl and \
+                  (mon.rating > 0 or args.use_zero):
                     candidates.append(mon)
             # If no available creatures, bail
             if not candidates:
-                break
+                if args.use_zero:
+                    print("No more candidates - exiting")
+                    break
+                else:
+                    print("Adding 0 CR monsters to pool")
+                    args.use_zero = True
+                    continue
             winner = random.choice(candidates)
             amt = random.randint(1, args.max_per_group)
 
