@@ -113,6 +113,8 @@ cr_to_xp = {
     30 : 155000
 }
 
+STATUSES = list()
+
 STATUS_HEALTHY = [
     "is having a wonderful day",
     "beams at the thought of destroying you",
@@ -165,7 +167,8 @@ class Enemy:
         self.template = template
         self.nickname = nickname
         self.hp = int(hp or template.hp)
-        self.status = random.choice(STATUS_HEALTHY)
+        self.status = ""
+        self.refresh_status()
 
     @property
     def hpinfo(self):
@@ -174,15 +177,10 @@ class Enemy:
     def refresh_status(self):
         """Refresh this creature's status text"""
         frac = self.hp / self.template.hp
-        if frac > 0.6:
-            msgs = STATUS_HEALTHY
-        elif frac > 0.2:
-            msgs = STATUS_OKAY
-        elif frac > 0.05:
-            msgs = STATUS_BAD
-        else:
-            msgs = STATUS_AWFUL
-        self.status = random.choice(msgs)
+        for thresh, msgs in STATUSES:
+            if frac > thresh:
+                self.status = random.choice(msgs)
+                break
 
 def setup_args():
     """Setup arguments"""
@@ -542,8 +540,27 @@ def loop_game(enemies):
             print("Command not recognized. Type 'help' for info.")
 
 
+def init_status(filename):
+    """Initialize statuses"""
+    global STATUSES
+    curr = None
+
+    with open(filename, "r") as fin:
+        lines = [ln.strip() for ln in fin.readlines()]
+
+    for line in lines:
+        if not line:
+            continue
+        if re.search(r"^[0-9.]+$", line):
+            curr = list()
+            STATUSES.append( (float(line), curr) )
+        else:
+            curr.append(line)
+
+
 def run_game(args, loadfile=None, monsters_count=None):
     """Run a game as DM!"""
+    init_status("status.txt")
     enemies = list()
 
     if loadfile:
