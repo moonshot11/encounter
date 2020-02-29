@@ -77,7 +77,7 @@ MULT_MIN_FACTOR = 0.5
 # min percentage for this monster's contribution to remaining XP
 NEXT_FLOOR = 0.1
 
-levels = None
+levels = list()
 templates = None
 DEBUG = False
 PRINT_HOW = False
@@ -188,10 +188,6 @@ def setup_args():
     """Setup arguments"""
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("difficulty",
-            help="Difficulty, or save data to load")
-    parser.add_argument("levels", nargs="*", type=int,
-            help="Space-separated string of player levels")
     parser.add_argument("--max-per-group", "-m", default=4, type=int,
             help="Max amt per group")
     parser.add_argument("--orcs", help="Require orcs", action="store_true")
@@ -279,16 +275,15 @@ def init_data(filename):
 
 def generate_monsters(args):
     """Generate a monster list"""
-    if args.difficulty not in ("easy", "med", "hard", "deadly"):
+    difficulty = setup_players()
+    if difficulty not in ("easy", "med", "hard", "deadly"):
         print("Requires {easy, med, hard, deadly}")
         sys.exit(1)
-    global levels
-    levels = args.levels
     avg_player_lvl = sum([int(x) for x in levels]) / len(levels)
 
     monster_templates = templates.copy()
     orc = find_monster(monster_templates, "Orc")
-    target_xp_ceil = calc_target_xp(args.difficulty)
+    target_xp_ceil = calc_target_xp(difficulty)
     target_xp_flr = target_xp_ceil * 0.9
 
     result = {}
@@ -399,8 +394,9 @@ def init_enemies(monsters_count):
     """Create list of enemies"""
     enemies = list()
     inits = list()
-    for i in range(len(args.levels)):
-        msg = "What did Player {} roll for initiative? ".format(i+1)
+    print("\n\nRoll for initiative!")
+    for i in range(len(levels)):
+        msg = "What is Player {}'s initiative? ".format(i+1)
         roll = int(input(msg))
         inits.append( ("Player {}".format(i+1), roll) )
     for mon in monsters_count:
@@ -557,14 +553,70 @@ def run_game(args, loadfile=None, monsters_count=None):
 
     loop_game(enemies)
 
+def startup_prompt():
+    """Prompt user for initial info"""
+    print()
+    print("~~~ Welcome to Encounter! ~~~")
+    print()
+    choice = None
+    while True:
+        choice = input("(G)enerate new monsters, or (L)oad an existing game? ")
+        choice = choice.strip().lower()
+        if not choice:
+            continue
+        if choice in ("l", "load"):
+            choice = "l"
+        elif choice in ("g", "gen", "generate"):
+            choice = "g"
+        elif choice in ("q", "quit", "exit"):
+            sys.exit(0)
+        else:
+            print("I did not recognize that.")
+            continue
+        return choice
+
+def setup_players():
+    """Setup players and return difficulty"""
+    global levels
+    choice = ""
+
+    while not re.search(r"^\d+$", choice):
+        choice = input("How many players are there? ")
+
+    amt = int(choice)
+    for i in range(amt):
+        choice = ""
+        while True:
+            choice = input("What is Player {}'s level? ".format(i+1))
+            if not re.search(r"^\d+$", choice):
+                choice = ""
+                continue
+            if int(choice) < 1 or int(choice) > 20:
+                print("Must be between 1 and 20")
+                choice = ""
+                continue
+            levels.append(int(choice))
+            break
+
+    while choice not in ("easy", "med", "hard", "deadly"):
+        choice = input("Choose a difficulty (easy, med, hard, deadly): ")
+        choice = choice.lower()
+
+    return choice
+
 if __name__ == "__main__":
     args = setup_args()
     templates = init_data(args.monster_data)
     monsters = None
-    if len(args.levels) > 0:
-        print("Generating monsters")
+    choice = startup_prompt()
+    if choice == "g":
         monsters = generate_monsters(args)
-    if monsters:
         run_game(args, monsters_count=monsters)
     else:
-        run_game(args, loadfile=args.difficulty)
+        while True:
+            choice = input("Enter file to load: ").strip()
+            if not os.path.isfile(choice):
+                print("Cannot open file")
+                continue
+            break
+        run_game(args, loadfile=choice)
