@@ -362,9 +362,10 @@ def load_game(filename):
 
     return result
 
-def save_game(filename, enemies):
+def save_game(filename, enemies, silent=False):
     """Save game to file"""
-    print("Saving to {}...".format(filename))
+    if not silent:
+        print("Saving to {}...".format(filename))
     lines = []
     for enemy in enemies:
         if isinstance(enemy, Enemy):
@@ -408,6 +409,8 @@ def init_enemies(monsters_count):
 
 def loop_game(enemies):
     """Play the game!"""
+    def autosave(enemies):
+        save_game("_auto.sav", enemies, silent=True)
     global DEBUG
     global SHOW_HOW
     global SHOW_SPEED
