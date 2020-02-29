@@ -1,4 +1,8 @@
-#!/d/Python37/python
+"""
+encounter.py
+
+For solo D&D encounters!
+"""
 
 import argparse
 import csv
@@ -585,7 +589,7 @@ def startup_prompt():
     print()
     choice = None
     while True:
-        choice = input("(G)enerate new monsters, or (L)oad an existing game? ")
+        choice = input("(G)enerate a new encounter, or (L)oad a save file? ")
         choice = choice.strip().lower()
         if not choice:
             continue
