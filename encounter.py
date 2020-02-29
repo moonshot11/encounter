@@ -55,6 +55,8 @@ Useful commands:
 
     how - Toggle whether descriptive statuses are printed.
 
+    speed/spd - Toggle whether each monster's speed is printed.
+
     load <filename> - Load a saved game. Current game will be saved in
                       _load.sav
 
@@ -81,6 +83,7 @@ levels = list()
 templates = None
 DEBUG = False
 PRINT_HOW = False
+SHOW_SPEED = False
 
 cr_to_xp = {
     0 : 10,
@@ -407,8 +410,8 @@ def init_enemies(monsters_count):
             amt = monsters_count[mon]
             for i in range(amt):
                 enemies.append(
-                    Enemy(mon, "{} [{}] ({})".format(
-                        mon.name, colors[count], mon.speed)))
+                    Enemy(mon, "{} [{}]".format(
+                        mon.name, colors[count])))
                 count += 1
         else:
             enemies.append(mon)
@@ -419,6 +422,7 @@ def loop_game(enemies):
     """Play the game!"""
     global DEBUG
     global PRINT_HOW
+    global SHOW_SPEED
     select = dict()
     while True:
         print("\n")
@@ -427,7 +431,9 @@ def loop_game(enemies):
         for mon in enemies:
             if isinstance(mon, Enemy) and mon.hp > 0:
                 how = " ... {}".format(mon.status) if PRINT_HOW else ""
-                print("{}) {}{}".format(str(idx).rjust(2), mon.nickname, how))
+                speed = " ({})".format(mon.template.speed) if SHOW_SPEED else ""
+                print("{}) {}{}{}".format(
+                    str(idx).rjust(2), mon.nickname, speed, how))
                 if DEBUG:
                     print("    " + mon.hpinfo)
                 select[idx] = mon
@@ -534,6 +540,8 @@ def loop_game(enemies):
             DEBUG = not DEBUG
         elif choice == "how":
             PRINT_HOW = not PRINT_HOW
+        elif choice in ("speed", "spd"):
+            SHOW_SPEED = not SHOW_SPEED
         elif choice == "help":
             print(MENU_USAGE)
         else:
