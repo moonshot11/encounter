@@ -465,13 +465,17 @@ def loop_game(enemies):
             enemy = select[uid]
             delta = int(match.group(2))
             enemy.hp -= delta
-            enemy.hp = max(0, min(enemy.hp, enemy.template.hp))
+            enemy.hp = min(enemy.hp, enemy.template.hp)
             enemy.refresh_status()
-            if enemy.hp == 0:
+            if enemy.hp <= 0:
                 print("  {} is dead!".format(enemy.nickname))
                 enemy.status = "is dead!"
-            else:
+            elif delta > 0:
                 print("  {} took {} damage!".format(enemy.nickname, delta))
+            elif delta < 0:
+                print("  {} recovered {} HP!".format(enemy.nickname, -delta))
+            else:
+                print("  {} took...no damage?".format(enemy.nickname))
             autosave(enemies)
             continue
 
