@@ -2,9 +2,75 @@
 
 import argparse
 import csv
+import os
 import random
 import re
 import sys
+
+MENU_USAGE = """
+Useful commands:
+
+    atk <enemy id> <attack total> - Attack the enemy specified by the ID. Roll
+                                    your die, add all modifiers, and provide
+                                    the total here.
+                                    Ex: "atk 2 17"
+                                    Attack enemy #2 for a total of 17
+
+    dmg <enemy id> <damage total> - Damage the enemy by the amount provided.
+                                    YOU ARE RESPONSIBLE FOR ALL MODIFIERS AND
+                                    RESISTANCE. This program does not account
+                                    for enemy resistances.
+                                    Ex: "dmg 3 12"
+                                    Damage enemy #3 for 12 HP.
+
+    <enemy id> sav <dc> <mods> - Have an enemy perform a saving throw. The
+                                 syntax of a saving throw is as follows:
+
+                                 [+/-]<ability>[bonus]
+
+                                 The simplest saving throw is just an ability,
+                                 such as con or dex. Put a plus or minus before
+                                 it to specify advantage or disadvantage.
+                                 Certain monsters have special bonuses just for
+                                 saving throws, which are added at the end.
+                                 Negative bonuses are allowed.
+
+                                 Examples:
+
+                                 3 sav 12 con - Enemy #3 performs a Constitution
+                                                saving throw of DC 12.
+
+                                 5 sav 9 +dex - Enemy #5 performs a Dexterity
+                                                saving throw of DC 9 with
+                                                advantage.
+
+                                 4 sav 15 str+4 - Enemy #4 performs a Strength
+                                                  saving throw of DC 15, with
+                                                  a +4 bonus to his roll.
+
+                                 2 sav 8 -wis+1 - Enemy #2 performs a Wisdom
+                                                  saving throw of DC 8, with
+                                                  disadvantage on the roll and
+                                                  a +1 bonus to the total.
+
+    how - Toggle whether descriptive statuses are printed.
+
+    load <filename> - Load a saved game. Current game will be saved in
+                      _load.sav
+
+    save <filename> - Save the current game to the filename provided.
+
+    quit - Save the current game to _quit.sav, and exit.
+
+    help - You're reading it, silly!
+
+
+Less useful commands:
+
+    debug - Toggle debug output, including exact enemy HP.
+
+    bail - Exit the program without saving.
+"""
 
 # avg_player_lvl * MULT_MIN_FACTOR to count in encounter multiplier
 MULT_MIN_FACTOR = 0.5
@@ -12,7 +78,9 @@ MULT_MIN_FACTOR = 0.5
 NEXT_FLOOR = 0.1
 
 levels = None
-avg_player_lvl = None
+templates = None
+DEBUG = False
+PRINT_HOW = False
 
 cr_to_xp = {
     0 : 10,
@@ -45,21 +113,83 @@ cr_to_xp = {
     30 : 155000
 }
 
+STATUS_HEALTHY = [
+    "is having a wonderful day",
+    "beams at the thought of destroying you",
+    "is thinking about yesterday's wonderful date",
+    "is radiating energy from all that morning's protein bars",
+    "is filled with DETERMINATION",
+    "looks eager to fight",
+    "looks pretty healthy"
+]
+
+STATUS_OKAY = [
+    "is a bit roughed up",
+    "is trying to hide a few bruises",
+    "has a few cuts and bruises",
+    "is irritated and looking to get this overwith"
+]
+
+STATUS_BAD = [
+    "is very bloodied",
+    "looks very tired",
+    "looks worn down",
+    "isn't doing so good",
+    "is enraged"
+]
+
+STATUS_AWFUL = [
+    "'s limbs are barely attached",
+    "is bleeding profusely",
+    "is barely conscious",
+    "is staggering around",
+    "is near death"
+]
+
 class Monster:
-    def __init__(self, name, rating, stats):
+    """A generic monster template with all static stat info"""
+    def __init__(self, name, rating, ac, hp, speed, stats):
         self.name = name
         self.rating = float(rating)
         self.xp = cr_to_xp[self.rating]
+        self.ac = int(ac)
+        self.hp = int(hp)
+        self.speed = speed
 
         (self.str, self.dex, self.con, self.int, self.wis, self.cha) = \
-        [int(s) for s in stats]
+        tuple([int(s) for s in stats])
+
+class Enemy:
+    """A monster instance with dynamic HP and a nickname"""
+    def __init__(self, template, nickname, hp=None):
+        self.template = template
+        self.nickname = nickname
+        self.hp = int(hp or template.hp)
+        self.status = random.choice(STATUS_HEALTHY)
+
+    @property
+    def hpinfo(self):
+        return "{}/{} HP".format(self.hp, self.template.hp)
+
+    def refresh_status(self):
+        """Refresh this creature's status text"""
+        frac = self.hp / self.template.hp
+        if frac > 0.6:
+            msgs = STATUS_HEALTHY
+        elif frac > 0.2:
+            msgs = STATUS_OKAY
+        elif frac > 0.05:
+            msgs = STATUS_BAD
+        else:
+            msgs = STATUS_AWFUL
+        self.status = random.choice(msgs)
 
 def setup_args():
     """Setup arguments"""
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("difficulty", choices=["easy", "med", "hard", "deadly"],
-            help="Difficulty")
+    parser.add_argument("difficulty",
+            help="Difficulty, or save data to load")
     parser.add_argument("levels", nargs="*", type=int,
             help="Space-separated string of player levels")
     parser.add_argument("--max-per-group", "-m", default=4, type=int,
@@ -67,7 +197,7 @@ def setup_args():
     parser.add_argument("--orcs", help="Require orcs", action="store_true")
     parser.add_argument("--use-zero", action="store_true",
             help="Use 0 CR monsters")
-    parser.add_argument("--input-file", default="srd.csv",
+    parser.add_argument("--monster-data", default="srd.csv",
             help="The data file with monster information")
 
     args = parser.parse_args()
@@ -120,6 +250,10 @@ def calc_target_xp(difficulty):
 
     return total
 
+def ability_to_mod(value):
+    """Convert ability score to modifier"""
+    return (value - 10) // 2
+
 def find_monster(monsters, name):
     """Return first Monster item with name"""
     for mon in monsters:
@@ -135,19 +269,25 @@ def init_data(filename):
     with open(filename, "r") as fin:
         reader = csv.DictReader(fin)
         for line in reader:
-            monsters.append(Monster(line['Name'], line['CR'],
+            monsters.append(Monster(
+                 line['Name'], line['CR'],
+                 line['AC'], line['HP'], line['Speeds'],
                 [line['STR'], line['DEX'], line['CON'],
                  line['INT'], line['WIS'], line['CHA']]))
 
     return monsters
 
-if __name__ == "__main__":
-    args = setup_args()
+def generate_monsters(args):
+    """Generate a monster list"""
+    if args.difficulty not in ("easy", "med", "hard", "deadly"):
+        print("Requires {easy, med, hard, deadly}")
+        sys.exit(1)
+    global levels
     levels = args.levels
     avg_player_lvl = sum([int(x) for x in levels]) / len(levels)
 
-    monsters = init_data(args.input_file)
-    orc = find_monster(monsters, "Orc")
+    monster_templates = templates.copy()
+    orc = find_monster(monster_templates, "Orc")
     target_xp_ceil = calc_target_xp(args.difficulty)
     target_xp_flr = target_xp_ceil * 0.9
 
@@ -166,7 +306,7 @@ if __name__ == "__main__":
         else:
             # Populate candidates and choose who's next
             candidates = []
-            for mon in monsters:
+            for mon in monster_templates:
                 if multiply(result, mon) <= target_xp_ceil and \
                    multiply(result, mon) - multiply(result) >= (target_xp_ceil - multiply(result)) * NEXT_FLOOR and \
                    mon.rating <= avg_player_lvl and \
@@ -185,7 +325,7 @@ if __name__ == "__main__":
             amt = random.randint(1, args.max_per_group)
 
         # Remove chosen monster from further candidacy
-        monsters.remove(winner)
+        monster_templates.remove(winner)
 
         while amt > 0:
             xp_total += winner.xp
@@ -207,3 +347,224 @@ if __name__ == "__main__":
     print(multiply(result), "XP")
     print(target_xp_flr, "XP <-- target")
     print(target_xp_ceil, "XP <-- target")
+
+    return result
+
+def load_game(filename):
+    """Load game from a save file"""
+    result = []
+    template = None
+    nickname = None
+    hp = None
+
+    with open(filename, "r") as fin:
+        lines = [ln.strip() for ln in fin.readlines() if ln.strip()]
+    for line in lines:
+        # Add "Player 1" to list
+        if line.startswith("#:"):
+            result.append(line[2:])
+        # Add enemies
+        elif line.startswith("Template: "):
+            criteria = line[10:]
+            template = [x for x in templates if x.name == criteria][0]
+        elif line.startswith("Nickname: "):
+            nickname = line[10:]
+        elif line.startswith("HP: "):
+            hp = line[4:]
+        elif line.startswith("Status: "):
+            status = line[8:]
+            enemy = Enemy(template, nickname, hp=hp)
+            enemy.status = status
+            result.append(enemy)
+
+    return result
+
+def save_game(filename, enemies):
+    """Save game to file"""
+    print("Saving to {}...".format(filename))
+    lines = []
+    for enemy in enemies:
+        if isinstance(enemy, Enemy):
+            lines.append("Template: {}\n".format(enemy.template.name))
+            lines.append("Nickname: {}\n".format(enemy.nickname))
+            lines.append("HP: {}\n".format(enemy.hp))
+            lines.append("Status: {}\n".format(enemy.status))
+            lines.append("\n")
+        else:
+            lines.append("#:{}\n\n".format(enemy))
+    with open(filename, "w") as fout:
+        fout.writelines(lines)
+
+def init_enemies(monsters_count):
+    """Create list of enemies"""
+    enemies = list()
+    inits = list()
+    for i in range(len(args.levels)):
+        msg = "What did Player {} roll for initiative? ".format(i+1)
+        roll = int(input(msg))
+        inits.append( ("Player {}".format(i+1), roll) )
+    for mon in monsters_count:
+        inits.append( (mon, random.randint(1, 20)) )
+    inits.sort(key=lambda x: x[1], reverse=True)
+    colors = ["red", "blue", "green", "orange", "purple", "pink", "yellow"]
+    for mon, init in inits:
+        if mon in monsters_count:
+            count = 0
+            amt = monsters_count[mon]
+            for i in range(amt):
+                enemies.append(
+                    Enemy(mon, "{} [{}] ({})".format(
+                        mon.name, colors[count], mon.speed)))
+                count += 1
+        else:
+            enemies.append(mon)
+
+    return enemies
+
+def loop_game(enemies):
+    """Play the game!"""
+    global DEBUG
+    global PRINT_HOW
+    select = dict()
+    while True:
+        print("\n")
+        choice = ""
+        idx = 1
+        for mon in enemies:
+            if isinstance(mon, Enemy) and mon.hp > 0:
+                how = " ... {}".format(mon.status) if PRINT_HOW else ""
+                print("{}) {}{}".format(str(idx).rjust(2), mon.nickname, how))
+                if DEBUG:
+                    print("    " + mon.hpinfo)
+                select[idx] = mon
+            elif not isinstance(mon, Enemy):
+                print("    " + mon)
+            if isinstance(mon, Enemy):
+                idx += 1
+        choice = input("> ").strip()
+        if not choice:
+            continue
+        print("\n")
+
+        basic_pattern = r"^{}\s+(\d+)\s+(-?\d+)"
+        match = re.search(basic_pattern.format("atk") + "$", choice)
+        if match:
+            enemy = select[int(match.group(1))]
+            atk = int(match.group(2))
+            if atk >= enemy.template.ac:
+                print(" == Hit! ==")
+            else:
+                print(" == Miss! ==")
+            continue
+
+        match = re.search(basic_pattern.format("dmg") + "$", choice)
+
+        if match:
+            enemy = select[int(match.group(1))]
+            delta = int(match.group(2))
+            enemy.hp -= delta
+            enemy.hp = max(0, min(enemy.hp, enemy.template.hp))
+            enemy.refresh_status()
+            if enemy.hp == 0:
+                print(enemy.nickname, "is dead!")
+            else:
+                print("{} took {} damage!".format(enemy.nickname, delta))
+            continue
+
+        match = re.search(r"(\d+)\s+sav\s+(-?\d+)\s+([\w+-]+)$", choice)
+        if match:
+            enemy = select[int(match.group(1))]
+            dc = int(match.group(2))
+            check_str = match.group(3)
+
+            # Pull out details of saving throw
+            match = re.match(r"([-+])?(\w\w\w)([-+]\d+)?", check_str)
+            if not match:
+                continue
+            adv = match.group(1)
+            attr = match.group(2)
+            bonus = match.group(3) or 0
+
+            if hasattr(enemy.template, attr):
+                ability = getattr(enemy.template, attr)
+                mod = ability_to_mod(ability)
+                if DEBUG:
+                    print("{} {} -> {}".format(attr, ability, mod))
+            else:
+                print("Enemy doesn't have attr:", attr)
+                continue
+
+            # Process saving throw
+            roll = random.randint(1, 20)
+            reroll = random.randint(1, 20)
+            if DEBUG: print("Rolls: {}, {}".format(roll, reroll))
+
+            if adv == "+":
+                roll = max(roll, reroll)
+            elif adv == "-":
+                roll = min(roll, reroll)
+
+            total = roll + mod + int(bonus)
+            if DEBUG:
+                print("{} = {} + {} + {}".format(total, roll, mod, bonus))
+
+            if total >= dc:
+                print("=== Saved! ===")
+            else:
+                print("=== Failed! ===")
+            continue
+
+        # -- Misc commands --
+        if choice.startswith("save"):
+            if choice[4:].strip():
+                filename = choice[4:].strip()
+            else:
+                filename = "_save.sav"
+            save_game(filename, enemies)
+        elif choice == "quit":
+            save_game("_quit.sav", enemies)
+            print("Quitting...")
+            return
+        elif choice == "bail":
+            print("Quitting without saving...")
+            return
+        elif choice.startswith("load "):
+            filename = choice[5:].strip()
+            if not os.path.isfile(filename):
+                print("Cannot load file:", filename)
+                continue
+            temp_enemies = load_game(filename)
+            save_game("_load.sav", enemies)
+            enemies = temp_enemies
+        elif choice == "debug":
+            DEBUG = not DEBUG
+        elif choice == "how":
+            PRINT_HOW = not PRINT_HOW
+        elif choice == "help":
+            print(MENU_USAGE)
+        else:
+            print("Command not recognized. Type 'help' for info.")
+
+
+def run_game(args, loadfile=None, monsters_count=None):
+    """Run a game as DM!"""
+    enemies = list()
+
+    if loadfile:
+        enemies = load_game(loadfile)
+    elif monsters:
+        enemies = init_enemies(monsters_count)
+
+    loop_game(enemies)
+
+if __name__ == "__main__":
+    args = setup_args()
+    templates = init_data(args.monster_data)
+    monsters = None
+    if len(args.levels) > 0:
+        print("Generating monsters")
+        monsters = generate_monsters(args)
+    if monsters:
+        run_game(args, monsters_count=monsters)
+    else:
+        run_game(args, loadfile=args.difficulty)
