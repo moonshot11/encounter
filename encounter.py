@@ -129,39 +129,6 @@ cr_to_xp = {
 
 STATUSES = list()
 
-STATUS_HEALTHY = [
-    "is having a wonderful day",
-    "beams at the thought of destroying you",
-    "is thinking about yesterday's wonderful date",
-    "is radiating energy from all that morning's protein bars",
-    "is filled with DETERMINATION",
-    "looks eager to fight",
-    "looks pretty healthy"
-]
-
-STATUS_OKAY = [
-    "is a bit roughed up",
-    "is trying to hide a few bruises",
-    "has a few cuts and bruises",
-    "is irritated and looking to get this overwith"
-]
-
-STATUS_BAD = [
-    "is very bloodied",
-    "looks very tired",
-    "looks worn down",
-    "isn't doing so good",
-    "is enraged"
-]
-
-STATUS_AWFUL = [
-    "'s limbs are barely attached",
-    "is bleeding profusely",
-    "is barely conscious",
-    "is staggering around",
-    "is near death"
-]
-
 class Monster:
     """A generic monster template with all static stat info"""
     def __init__(self, name, rating, ac, hp, speed, stats):
@@ -177,12 +144,15 @@ class Monster:
 
 class Enemy:
     """A monster instance with dynamic HP and a nickname"""
-    def __init__(self, template, nickname, hp=None):
+    def __init__(self, template, nickname, hp=None, status=None, sex=None):
         self.template = template
         self.nickname = nickname
         self.hp = int(hp or template.hp)
-        self.status = ""
-        self.refresh_status()
+        self.sex = sex or random.choice(('m', 'f'))
+        if status:
+            self.status = status
+        else:
+            self.refresh_status()
 
     @property
     def hpinfo(self):
@@ -194,6 +164,10 @@ class Enemy:
         for thresh, msgs in STATUSES:
             if frac > thresh:
                 self.status = random.choice(msgs)
+                if self.sex == 'm':
+                    self.status = self.status.replace("_his", "his")
+                else:
+                    self.status = self.status.replace("_his", "her")
                 break
 
 def setup_args():
@@ -363,6 +337,7 @@ def load_game(filename):
     template = None
     nickname = None
     hp = None
+    sex = None
 
     with open(filename, "r") as fin:
         lines = [ln.strip() for ln in fin.readlines() if ln.strip()]
@@ -376,12 +351,13 @@ def load_game(filename):
             template = [x for x in templates if x.name == criteria][0]
         elif line.startswith("Nickname: "):
             nickname = line[10:]
+        elif line.startswith("Sex: "):
+            sex = line[5:]
         elif line.startswith("HP: "):
             hp = line[4:]
         elif line.startswith("Status: "):
             status = line[8:]
-            enemy = Enemy(template, nickname, hp=hp)
-            enemy.status = status
+            enemy = Enemy(template, nickname, hp=hp, status=status, sex=sex)
             result.append(enemy)
 
     return result
@@ -394,6 +370,7 @@ def save_game(filename, enemies):
         if isinstance(enemy, Enemy):
             lines.append("Template: {}\n".format(enemy.template.name))
             lines.append("Nickname: {}\n".format(enemy.nickname))
+            lines.append("Sex: {}\n".format(enemy.sex))
             lines.append("HP: {}\n".format(enemy.hp))
             lines.append("Status: {}\n".format(enemy.status))
             lines.append("\n")
