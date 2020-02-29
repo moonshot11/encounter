@@ -443,9 +443,9 @@ def loop_game(enemies):
             enemy = select[int(match.group(1))]
             atk = int(match.group(2))
             if atk >= enemy.template.ac:
-                print(" == Hit! ==")
+                print("=== Hit! ===")
             else:
-                print(" == Miss! ==")
+                print("=== Miss! ===")
             continue
 
         match = re.search(basic_pattern.format("dmg") + "$", choice)
@@ -457,10 +457,11 @@ def loop_game(enemies):
             enemy.hp = max(0, min(enemy.hp, enemy.template.hp))
             enemy.refresh_status()
             if enemy.hp == 0:
-                print(enemy.nickname, "is dead!")
+                print("  {} is dead!".format(enemy.nickname))
                 enemy.status = "is dead!"
             else:
-                print("{} took {} damage!".format(enemy.nickname, delta))
+                print("  {} took {} damage!".format(enemy.nickname, delta))
+            autosave(enemies)
             continue
 
         match = re.search(r"(\d+)\s+sav\s+(-?\d+)\s+([\w+-]+)$", choice)
