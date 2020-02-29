@@ -63,10 +63,12 @@ Useful commands:
     speed/spd - Toggle whether each monster's speed is printed.
                 Off by default.
 
-    load <filename> - Load a saved game. Current game will be saved in
-                      _load.sav
+    load <filename> - Load a saved game. Current game is saved in _load.sav
 
     save <filename> - Save the current game to the filename provided.
+
+    newgame - Restart the application to generate a new encounter.
+              Autosaves current game to _auto.sav
 
     quit - Save the current game to _quit.sav, and exit.
 
@@ -262,9 +264,6 @@ def init_data(filename):
 def generate_monsters(args):
     """Generate a monster list"""
     difficulty = setup_players()
-    if difficulty not in ("easy", "med", "hard", "deadly"):
-        print("Requires {easy, med, hard, deadly}")
-        sys.exit(1)
     avg_player_lvl = sum([int(x) for x in levels]) / len(levels)
 
     monster_templates = templates.copy()
@@ -380,14 +379,26 @@ def save_game(filename, enemies, silent=False):
     with open(filename, "w") as fout:
         fout.writelines(lines)
 
+def input_int(msg, sign=False):
+    """Prompt for an int (no sign)"""
+    choice = ""
+    pattern = "^"
+    if sign:
+        pattern += r"[+-]?"
+    pattern += r"\d+"
+    pattern += r"$"
+    while not re.search(pattern, choice):
+        choice = input(msg)
+    return int(choice)
+
 def init_enemies(monsters_count):
     """Create list of enemies"""
     enemies = list()
     inits = list()
     print("\n\nRoll for initiative!")
     for i in range(len(levels)):
-        msg = "What is Player {}'s initiative? ".format(i+1)
-        roll = int(input(msg))
+        roll = input_int("What is Player {}'s initiative? ".format(i+1),
+                         sign=True)
         inits.append( ("Player {}".format(i+1), roll) )
     for mon in monsters_count:
         inits.append( (mon, random.randint(1, 20)) )
@@ -407,7 +418,7 @@ def init_enemies(monsters_count):
 
     return enemies
 
-def loop_game(enemies):
+def loop_game():
     """Play the game!"""
     def autosave(enemies):
         save_game("_auto.sav", enemies, silent=True)
@@ -416,25 +427,35 @@ def loop_game(enemies):
     global SHOW_SPEED
     global SHOW_DEAD
 
+    enemies = dict()
     select = dict()
 
     while True:
+        # -- Game startup --
+        if not enemies:
+            enemies = startup_prompt()
+            select.clear()
+            idx = 1
+            for mon in enemies:
+                if not isinstance(mon, Enemy):
+                    continue
+                select[idx] = mon
+                idx += 1
+
+        # -- Main loop --
         print("\n")
         choice = ""
-        idx = 1
         for mon in enemies:
             if isinstance(mon, Enemy) and (mon.hp > 0 or SHOW_DEAD):
                 how = " ... {}".format(mon.status) if SHOW_HOW else ""
                 speed = " ({})".format(mon.template.speed) if SHOW_SPEED else ""
+                idx = next(k for k,v in select.items() if v == mon)
                 print("{}) {}{}{}".format(
                     str(idx).rjust(2), mon.nickname, speed, how))
                 if DEBUG:
                     print("    " + mon.hpinfo)
-                select[idx] = mon
             elif not isinstance(mon, Enemy):
                 print("    " + mon)
-            if isinstance(mon, Enemy):
-                idx += 1
         choice = input("> ").strip()
         if not choice:
             continue
@@ -556,6 +577,9 @@ def loop_game(enemies):
             SHOW_SPEED = not SHOW_SPEED
         elif choice == "dead":
             SHOW_DEAD = not SHOW_DEAD
+        elif choice == "newgame":
+            autosave(enemies)
+            enemies.clear()
         elif choice == "help":
             print(MENU_USAGE)
         else:
@@ -565,6 +589,7 @@ def loop_game(enemies):
 def init_status(filename):
     """Initialize statuses"""
     global STATUSES
+    STATUSES.clear()
     curr = None
 
     with open(filename, "r") as fin:
@@ -580,25 +605,13 @@ def init_status(filename):
             curr.append(line)
 
 
-def run_game(args, loadfile=None, monsters_count=None):
-    """Run a game as DM!"""
-    init_status("status.txt")
-    enemies = list()
-
-    if loadfile:
-        enemies = load_game(loadfile)
-    elif monsters:
-        enemies = init_enemies(monsters_count)
-
-    loop_game(enemies)
-
 def startup_prompt():
     """Prompt user for initial info"""
     print()
     print("~~~ Welcome to Encounter! ~~~")
     print()
     choice = None
-    while True:
+    while not choice:
         choice = input("(G)enerate a new encounter, or (L)oad a save file? ")
         choice = choice.strip().lower()
         if not choice:
@@ -611,30 +624,38 @@ def startup_prompt():
             sys.exit(0)
         else:
             print("I did not recognize that.")
-            continue
-        return choice
+            choice = None
+
+    if choice == "g":
+        monster_count = generate_monsters(args)
+        enemies = init_enemies(monster_count)
+    elif choice == "l":
+        while True:
+            loadfile = input("Enter file to load: ").strip()
+            if not os.path.isfile(loadfile):
+                print("Cannot open file")
+                continue
+            enemies = load_game(loadfile)
+            break
+
+    return enemies
 
 def setup_players():
     """Setup players and return difficulty"""
     global levels
+    levels.clear()
     choice = ""
 
-    while not re.search(r"^\d+$", choice):
-        choice = input("How many players are there? ")
-
-    amt = int(choice)
+    amt = 0
+    while amt < 1:
+        amt = input_int("How many players are there? ")
     for i in range(amt):
         choice = ""
         while True:
-            choice = input("What is Player {}'s level? ".format(i+1))
-            if not re.search(r"^\d+$", choice):
-                choice = ""
-                continue
-            if int(choice) < 1 or int(choice) > 20:
-                print("Must be between 1 and 20")
-                choice = ""
-                continue
-            levels.append(int(choice))
+            lvl = 0
+            while lvl < 1 or lvl > 20:
+                lvl = input_int("What is Player {}'s level (1-20)? ".format(i+1))
+            levels.append(lvl)
             break
 
     while choice not in ("easy", "med", "hard", "deadly"):
@@ -646,16 +667,5 @@ def setup_players():
 if __name__ == "__main__":
     args = setup_args()
     templates = init_data(args.monster_data)
-    monsters = None
-    choice = startup_prompt()
-    if choice == "g":
-        monsters = generate_monsters(args)
-        run_game(args, monsters_count=monsters)
-    else:
-        while True:
-            choice = input("Enter file to load: ").strip()
-            if not os.path.isfile(choice):
-                print("Cannot open file")
-                continue
-            break
-        run_game(args, loadfile=choice)
+    init_status("status.txt")
+    loop_game()
