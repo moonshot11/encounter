@@ -440,7 +440,11 @@ def loop_game(enemies):
         basic_pattern = r"^{}\s+(\d+)\s+(-?\d+)"
         match = re.search(basic_pattern.format("atk") + "$", choice)
         if match:
-            enemy = select[int(match.group(1))]
+            uid = int(match.group(1))
+            if uid not in select:
+                print("Enemy #{} does not exist!".format(uid))
+                continue
+            enemy = select[uid]
             atk = int(match.group(2))
             if atk >= enemy.template.ac:
                 print("=== Hit! ===")
@@ -451,7 +455,11 @@ def loop_game(enemies):
         match = re.search(basic_pattern.format("dmg") + "$", choice)
 
         if match:
-            enemy = select[int(match.group(1))]
+            uid = int(match.group(1))
+            if uid not in select:
+                print("Enemy #{} does not exist!".format(uid))
+                continue
+            enemy = select[uid]
             delta = int(match.group(2))
             enemy.hp -= delta
             enemy.hp = max(0, min(enemy.hp, enemy.template.hp))
@@ -466,7 +474,11 @@ def loop_game(enemies):
 
         match = re.search(r"(\d+)\s+sav\s+(-?\d+)\s+([\w+-]+)$", choice)
         if match:
-            enemy = select[int(match.group(1))]
+            uid = int(match.group(1))
+            if uid not in select:
+                print("Enemy #{} does not exist!".format(uid))
+                continue
+            enemy = select[uid]
             dc = int(match.group(2))
             check_str = match.group(3)
 
