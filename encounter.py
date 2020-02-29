@@ -58,8 +58,10 @@ Useful commands:
                                                   a +1 bonus to the total.
 
     how - Toggle whether descriptive statuses are printed.
+          On by default.
 
     speed/spd - Toggle whether each monster's speed is printed.
+                Off by default.
 
     load <filename> - Load a saved game. Current game will be saved in
                       _load.sav
@@ -74,6 +76,10 @@ Useful commands:
 Less useful commands:
 
     debug - Toggle debug output, including exact enemy HP.
+            Off by default.
+
+    dead - Toggle whether to list enemies once they have 0 HP.
+           Off by default.
 
     bail - Exit the program without saving.
 """
@@ -86,8 +92,9 @@ NEXT_FLOOR = 0.1
 levels = list()
 templates = None
 DEBUG = False
-PRINT_HOW = False
+SHOW_HOW = True
 SHOW_SPEED = False
+SHOW_DEAD = False
 
 cr_to_xp = {
     0 : 10,
@@ -425,16 +432,19 @@ def init_enemies(monsters_count):
 def loop_game(enemies):
     """Play the game!"""
     global DEBUG
-    global PRINT_HOW
+    global SHOW_HOW
     global SHOW_SPEED
+    global SHOW_DEAD
+
     select = dict()
+
     while True:
         print("\n")
         choice = ""
         idx = 1
         for mon in enemies:
-            if isinstance(mon, Enemy) and mon.hp > 0:
-                how = " ... {}".format(mon.status) if PRINT_HOW else ""
+            if isinstance(mon, Enemy) and (mon.hp > 0 or SHOW_DEAD):
+                how = " ... {}".format(mon.status) if SHOW_HOW else ""
                 speed = " ({})".format(mon.template.speed) if SHOW_SPEED else ""
                 print("{}) {}{}{}".format(
                     str(idx).rjust(2), mon.nickname, speed, how))
@@ -471,6 +481,7 @@ def loop_game(enemies):
             enemy.refresh_status()
             if enemy.hp == 0:
                 print(enemy.nickname, "is dead!")
+                enemy.status = "is dead!"
             else:
                 print("{} took {} damage!".format(enemy.nickname, delta))
             continue
@@ -543,9 +554,11 @@ def loop_game(enemies):
         elif choice == "debug":
             DEBUG = not DEBUG
         elif choice == "how":
-            PRINT_HOW = not PRINT_HOW
+            SHOW_HOW = not SHOW_HOW
         elif choice in ("speed", "spd"):
             SHOW_SPEED = not SHOW_SPEED
+        elif choice == "dead":
+            SHOW_DEAD = not SHOW_DEAD
         elif choice == "help":
             print(MENU_USAGE)
         else:
