@@ -140,6 +140,9 @@ When you load a game, the previous game is saved in `_load.sav`.
 - **Start a new game** `newgame`  
 Set up a new encounter. An autosave is created in `_auto.sav` of your current game in before starting a new one.
 
+- **Restart current battle** `restart`  
+Sets all health of every enemy (even if dead) back to full health. Autosaves to `_auto.sav` before resetting.
+
 - **Quit** `quit`  
 Save the current game to `_quit.sav` and exit.
 

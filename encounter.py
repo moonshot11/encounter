@@ -70,6 +70,8 @@ Useful commands:
     newgame - Restart the application to generate a new encounter.
               Autosaves current game to _auto.sav
 
+    restart - Set all enemy HP to full. Autosaves current game to _auto.sav
+
     quit - Save the current game to _quit.sav, and exit.
 
     help - You're reading it, silly!
@@ -644,6 +646,11 @@ def loop_game():
             autosave(enemies)
             enemies.clear()
             select.clear()
+        elif choice == "restart":
+            autosave(enemies)
+            for enemy in select.values():
+                enemy.hp = enemy.template.hp
+                enemy.refresh_status()
         elif choice == "help":
             print(MENU_USAGE)
         else:
