@@ -32,6 +32,7 @@ is sizing you up
 looks flustered
 looks surprised
 is a bit off balance
+clearly thought this would be easier
 
 0.1
 is very bloodied
@@ -41,7 +42,7 @@ isn't doing so good
 is enraged
 is definitely NOT filled with determination
 is disoriented
-needs an inhaler
+needs _his inhaler
 is blinded by blood
 
 0
