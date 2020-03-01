@@ -460,7 +460,7 @@ def init_enemies(monsters_count):
                          sign=True)
         inits.append( ("Player {}".format(i+1), roll) )
     for mon in monsters_count:
-        inits.append( (mon, random.randint(1, 20)) )
+        inits.append( (mon, random.randint(1, 20) + ability_to_mod(mon.dex)) )
     inits.sort(key=lambda x: x[1], reverse=True)
     colors = ["red", "blue", "green", "orange", "purple", "pink", "yellow"]
     for mon, init in inits:
