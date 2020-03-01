@@ -164,14 +164,19 @@ class Enemy:
 
     def refresh_status(self):
         """Refresh this creature's status text"""
+        GENDER = {
+            "_hisher" : ("his", "her"),
+            "_hishers" : ("his", "hers"),
+            "_heshe" : ("he", "she"),
+            "_himher" : ("him", "her")
+        }
         frac = self.hp / self.template.hp
         for thresh, msgs in STATUSES:
             if frac > thresh:
                 self.status = random.choice(msgs)
-                if self.sex == 'm':
-                    self.status = self.status.replace("_his", "his")
-                else:
-                    self.status = self.status.replace("_his", "her")
+                idx = int(self.sex == "f")
+                for key in GENDER:
+                    self.status = self.status.replace(key, GENDER[key][idx])
                 break
 
 def setup_args():
