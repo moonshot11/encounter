@@ -437,6 +437,8 @@ def loop_game():
             enemies = startup_prompt()
             select.clear()
             idx = 1
+
+        if not select:
             for mon in enemies:
                 if not isinstance(mon, Enemy):
                     continue
@@ -570,6 +572,7 @@ def loop_game():
             temp_enemies = load_game(filename)
             save_game("_load.sav", enemies)
             enemies = temp_enemies
+            select.clear()
         elif choice == "debug":
             DEBUG = not DEBUG
         elif choice == "how":
@@ -581,6 +584,7 @@ def loop_game():
         elif choice == "newgame":
             autosave(enemies)
             enemies.clear()
+            select.clear()
         elif choice == "help":
             print(MENU_USAGE)
         else:
