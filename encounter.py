@@ -458,7 +458,7 @@ def loop_game():
                 if DEBUG:
                     print("    " + mon.hpinfo)
             elif not isinstance(mon, Enemy):
-                print("    " + mon)
+                print(" -) " + mon)
         choice = input("> ").strip()
         if not choice:
             continue
