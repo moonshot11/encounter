@@ -325,8 +325,9 @@ def generate_monsters(args):
     print()
 
     print(multiply(result), "XP")
-    print(target_xp_flr, "XP <-- target")
-    print(target_xp_ceil, "XP <-- target")
+    if DEBUG:
+        print(target_xp_flr, "XP <-- target")
+        print(target_xp_ceil, "XP <-- target")
 
     return result
 
