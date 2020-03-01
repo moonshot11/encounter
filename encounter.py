@@ -268,8 +268,8 @@ def generate_monsters(args):
 
     monster_templates = templates.copy()
     orc = find_monster(monster_templates, "Orc")
-    target_xp_ceil = calc_target_xp(difficulty)
-    target_xp_flr = target_xp_ceil * 0.9
+    target_xp_flr = calc_target_xp(difficulty)
+    target_xp_ceil = target_xp_flr * 1.1
 
     result = {}
     xp_total = 0
