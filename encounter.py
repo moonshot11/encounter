@@ -238,13 +238,15 @@ def ability_to_mod(value):
     """Convert ability score to modifier"""
     return (value - 10) // 2
 
-def find_monster(monsters, name):
+def find_monster(monsters, name, error=False):
     """Return first Monster item with name"""
     for mon in monsters:
         if mon.name == name:
             return mon
-    print("ERROR: Could not find", name)
-    sys.exit(1)
+    if error:
+        print("ERROR: Could not find", name)
+        sys.exit(1)
+    return None
 
 def init_data(filename):
     """Read data"""
@@ -261,13 +263,69 @@ def init_data(filename):
 
     return monsters
 
-def generate_monsters(args):
+def manual_monsters():
+    """Manually create a monster list"""
+    global levels
+    # Item: (monster, count)
+    monster_count = dict()
+
+    amt_players = 0
+    while amt_players < 1:
+        amt_players = input_int("How many players are there? ")
+    levels = [None] * amt_players
+
+    while True:
+        print()
+        mons_by_name = sorted(monster_count.keys(), key=lambda k: k.name)
+        for i, mon in enumerate(mons_by_name):
+            amt = monster_count[mon]
+            print("{}) {} x{}".format(i+1, mon.name, amt))
+        print()
+
+        print("Commands:")
+        print("  set   (set the amount of a monster; add to list if necessary)")
+        print("  del   (delete this entry from list)")
+        print("  clear (clears all monsters from list, be careful!)")
+        print("  done")
+        print()
+
+        cmd = input("What would you like to do? ").strip()
+        print()
+
+        if cmd == "set":
+            choice = input("Which monster? ").strip()
+            mon = find_monster(templates, choice)
+            if not mon:
+                print("I couldn't find that monster")
+                continue
+            choice = input_int("How many? ")
+            monster_count[mon] = choice
+        elif cmd == "del":
+            if not monster_count:
+                print("No monsters to delete!")
+                continue
+            choice = input_int("Which monster to delete (use number)? ")
+            if choice < 1 or choice > len(monster_count):
+                print("That number is out of bounds!")
+                continue
+            del monster_count[mons_by_name[choice-1]]
+        elif cmd == "clear":
+            monster_count.clear()
+        elif cmd == "done":
+            if not monster_count:
+                print("No monsters added! Add a monster first.")
+                continue
+            break
+
+    return monster_count
+
+def random_monsters(args):
     """Generate a monster list"""
     difficulty = setup_players()
     avg_player_lvl = sum([int(x) for x in levels]) / len(levels)
 
     monster_templates = templates.copy()
-    orc = find_monster(monster_templates, "Orc")
+    orc = find_monster(monster_templates, "Orc", error=True)
     target_xp_flr = calc_target_xp(difficulty)
     target_xp_ceil = target_xp_flr * 1.1
 
@@ -411,7 +469,7 @@ def init_enemies(monsters_count):
             amt = monsters_count[mon]
             for i in range(amt):
                 nickname = mon.name
-                if amt > 1:
+                if amt > 1 and count < len(colors):
                     nickname += " [{}]".format(colors[count])
                 enemies.append(Enemy(mon, nickname))
                 count += 1
@@ -618,22 +676,27 @@ def startup_prompt():
     print()
     choice = None
     while not choice:
-        choice = input("(G)enerate a new encounter, or (L)oad a save file? ")
+        choice = input("(R)andomize monsters, (C)hoose your own, or (L)oad a save file? ")
         choice = choice.strip().lower()
         if not choice:
             continue
         if choice in ("l", "load"):
             choice = "l"
-        elif choice in ("g", "gen", "generate"):
-            choice = "g"
+        elif choice in ("c", "choose"):
+            choice = "c"
+        elif choice in ("r", "random", "randomize"):
+            choice = "r"
         elif choice in ("q", "quit", "exit"):
             sys.exit(0)
         else:
             print("I did not recognize that.")
             choice = None
 
-    if choice == "g":
-        monster_count = generate_monsters(args)
+    if choice == "c":
+        monster_count = manual_monsters()
+        enemies = init_enemies(monster_count)
+    elif choice == "r":
+        monster_count = random_monsters(args)
         enemies = init_enemies(monster_count)
     elif choice == "l":
         while True:

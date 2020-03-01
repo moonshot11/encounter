@@ -33,12 +33,12 @@ Have fun, and kick the snot out of a Violet Fungus!
 
 ## Getting Started
 
-If this is your first time running Encounter, you won't have any saved files, so at the prompt, type "g" and hit Enter, to generate a new encounter.
+If this is your first time running Encounter, you won't have any saved files, so at the prompt, type "r" and hit Enter to randomize an encounter.
 
 ```
 ~~~ Welcome to Encounter! ~~~
 
-(G)enerate a new encounter, or (L)oad a save file? g
+(R)andomize monsters, (C)hoose your own, or (L)oad a save file? r
 ```
 
 Next, it will prompt you to set up the players. Note that as of now, players are not named, so you will need to keep track of who is Player 1, Player 2, etc.
