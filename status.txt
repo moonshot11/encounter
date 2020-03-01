@@ -1,4 +1,3 @@
-0.6
 is having a wonderful day
 beams at the thought of destroying you
 is excited for _his upcoming date!
@@ -20,7 +19,8 @@ is making the most of a beautiful day
 is finishing a delicious chili dog
 has strong political opinions
 
-0.3
+0.5
+
 is a bit roughed up
 is trying to hide a few bruises
 has a few cuts and bruises
@@ -34,7 +34,8 @@ looks surprised
 is a bit off balance
 clearly thought this would be easier
 
-0.1
+0.25
+
 is very bloodied
 looks very tired
 looks worn down
@@ -45,7 +46,8 @@ is disoriented
 needs _his inhaler
 is blinded by blood
 
-0
+0.1
+
 has lost a limb
 is bleeding profusely
 is barely conscious

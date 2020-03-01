@@ -654,7 +654,7 @@ def init_status(filename):
     """Initialize statuses"""
     global STATUSES
     STATUSES.clear()
-    curr = None
+    curr = list()
 
     with open(filename, "r") as fin:
         lines = [ln.strip() for ln in fin.readlines()]
@@ -663,10 +663,13 @@ def init_status(filename):
         if not line:
             continue
         if re.search(r"^[0-9.]+$", line):
-            curr = list()
             STATUSES.append( (float(line), curr) )
+            curr = list()
         else:
             curr.append(line)
+    # The file set is for > 0 HP
+    if curr:
+        STATUSES.append( (0, curr) )
 
 
 def startup_prompt():
