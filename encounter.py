@@ -409,9 +409,10 @@ def init_enemies(monsters_count):
             count = 0
             amt = monsters_count[mon]
             for i in range(amt):
-                enemies.append(
-                    Enemy(mon, "{} [{}]".format(
-                        mon.name, colors[count])))
+                nickname = mon.name
+                if amt > 1:
+                    nickname += " [{}]".format(colors[count])
+                enemies.append(Enemy(mon, nickname))
                 count += 1
         else:
             enemies.append(mon)
