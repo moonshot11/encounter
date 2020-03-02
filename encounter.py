@@ -57,6 +57,10 @@ Useful commands:
                                                   disadvantage on the roll and
                                                   a +1 bonus to the total.
 
+                                1 sav 12 str/dex - Perform a saving throw on
+                                                   STR or DEX, whichever has the
+                                                   higher ability score.
+
     how - Toggle whether descriptive statuses are printed.
           On by default.
 
@@ -87,6 +91,8 @@ Less useful commands:
 
     bail - Exit the program without saving.
 """
+
+VALID_ABILITIES = ["str", "dex", "con", "int", "wis", "cha"]
 
 # avg_player_lvl * MULT_MIN_FACTOR to count in encounter multiplier
 MULT_MIN_FACTOR = 0.5
@@ -525,7 +531,7 @@ def loop_game():
                     print("    " + mon.hpinfo)
             elif not isinstance(mon, Enemy):
                 print(" -) " + mon)
-        choice = input("> ").strip()
+        choice = input("> ").strip().lower()
         if not choice:
             continue
         print("\n")
@@ -569,7 +575,7 @@ def loop_game():
             autosave(enemies)
             continue
 
-        match = re.search(r"(\d+)\s+sav\s+(-?\d+)\s+([\w+-]+)$", choice)
+        match = re.search(r"(\d+)\s+sav\s+(-?\d+)\s+([\w+-/]+)$", choice)
         if match:
             uid = int(match.group(1))
             if uid not in select:
@@ -580,12 +586,24 @@ def loop_game():
             check_str = match.group(3)
 
             # Pull out details of saving throw
-            match = re.match(r"([-+])?(\w\w\w)([-+]\d+)?", check_str)
+            match = re.match(r"([-+])?([a-zA-Z/]+)([-+]\d+)?", check_str)
             if not match:
                 continue
             adv = match.group(1)
             attr = match.group(2)
             bonus = match.group(3) or 0
+
+            # Find highest ability
+            abilities = attr.split("/")
+            f_abilities = filter(lambda x: x in VALID_ABILITIES, abilities)
+            if abilities != list(f_abilities):
+                print("Did not recognize all abilities provided!")
+                continue
+            attr = sorted(abilities,
+                          key=lambda x: getattr(enemy.template, x),
+                          reverse=True)[0]
+            if DEBUG:
+                print("Picked:", attr)
 
             if hasattr(enemy.template, attr):
                 ability = getattr(enemy.template, attr)
