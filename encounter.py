@@ -30,7 +30,7 @@ Useful commands:
     <enemy id> sav <dc> <mods> - Have an enemy perform a saving throw. The
                                  syntax of a saving throw is as follows:
 
-                                 [+/-]<ability>[bonus]
+                                 [+/-]<abilities>
 
                                  The simplest saving throw is just an ability,
                                  such as con or dex. Put a plus or minus before
@@ -57,9 +57,10 @@ Useful commands:
                                                   disadvantage on the roll and
                                                   a +1 bonus to the total.
 
-                                1 sav 12 str/dex - Perform a saving throw on
-                                                   STR or DEX, whichever has the
-                                                   higher ability score.
+                                1 sav 12 str+1/dex+0 - Perform a saving throw
+                                                       on STR or DEX, whichever
+                                                       has the higher ability
+                                                       score.
 
     how - Toggle whether descriptive statuses are printed.
           On by default.
@@ -586,35 +587,39 @@ def loop_game():
             check_str = match.group(3)
 
             # Pull out details of saving throw
-            match = re.match(r"([-+])?([a-zA-Z/]+)([-+]\d+)?", check_str)
+            match = re.match(r"([-+])?([-+a-zA-Z/\d]+)?", check_str)
             if not match:
                 continue
             adv = match.group(1)
             attr = match.group(2)
-            bonus = match.group(3) or 0
 
-            # Find highest ability
             abilities = attr.split("/")
-            f_abilities = filter(lambda x: x in VALID_ABILITIES, abilities)
-            if abilities != list(f_abilities):
-                print("Did not recognize all abilities provided!")
-                continue
-            attr = sorted(abilities,
-                          key=lambda x: getattr(enemy.template, x),
-                          reverse=True)[0]
-            if DEBUG:
-                print("Picked:", attr)
-
-            if hasattr(enemy.template, attr):
-                ability = getattr(enemy.template, attr)
-                mod = ability_to_mod(ability)
-                if DEBUG:
-                    print("{} {} -> {}".format(attr, ability, mod))
+            scores = list()
+            reloop = True
+            # Check if any abilities aren't valid
+            for ability in abilities:
+                match = re.search("^(\w+)([+-]\d+)?", ability)
+                if not match:
+                    print("Ability {} not formatted correctly!".format(ability))
+                    continue
+                trait = match.group(1)
+                override = match.group(2)
+                if trait not in VALID_ABILITIES:
+                    print("Ability {} not recognizd!".format(trait))
+                    break
+                if override:
+                    scores.append(int(override))
+                else:
+                    score = int(getattr(enemy.template, trait))
+                    score = ability_to_mod(score)
+                    scores.append(score)
             else:
-                print("Enemy doesn't have attr:", attr)
+                reloop = False
+            if reloop:
                 continue
 
             # Process saving throw
+            bonus = max(scores)
             roll = random.randint(1, 20)
             reroll = random.randint(1, 20)
             if DEBUG: print("Rolls: {}, {}".format(roll, reroll))
@@ -624,9 +629,9 @@ def loop_game():
             elif adv == "-":
                 roll = min(roll, reroll)
 
-            total = roll + mod + int(bonus)
+            total = roll + bonus
             if DEBUG:
-                print("{} = {} + {} + {}".format(total, roll, mod, bonus))
+                print("{} = {} + {}".format(total, roll, bonus))
 
             if total >= dc:
                 print("=== Saved! ===")
