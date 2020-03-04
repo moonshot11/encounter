@@ -96,6 +96,7 @@ Less useful commands:
 """
 
 VALID_ABILITIES = ["str", "dex", "con", "int", "wis", "cha"]
+DIFFICULTIES = ["easy", "med", "hard", "deadly"]
 
 # avg_player_lvl * MULT_MIN_FACTOR to count in encounter multiplier
 MULT_MIN_FACTOR = 0.5
@@ -233,8 +234,6 @@ def multiply(monster_table, *args):
 
 def calc_target_xp(difficulty):
     """Get target XP from table"""
-    diffs = ["easy", "med", "hard", "deadly"]
-
     with open("thresholds.csv", "r") as fin:
         lines = [line.strip() for line in fin.readlines()
                  if line.strip() and re.match(r"[0-9,]+$", line.strip())]
@@ -246,7 +245,7 @@ def calc_target_xp(difficulty):
 
     total = 0
     for lvl in levels:
-        total += int(targets[lvl][diffs.index(difficulty)])
+        total += int(targets[lvl][DIFFICULTIES.index(difficulty)])
 
     return total
 
@@ -781,8 +780,9 @@ def setup_players():
             levels.append(lvl)
             break
 
-    while choice not in ("easy", "med", "hard", "deadly"):
-        choice = input("Choose a difficulty (easy, med, hard, deadly): ")
+    while choice not in DIFFICULTIES:
+        diff_str = ", ".join(DIFFICULTIES)
+        choice = input("Choose a difficulty ({}): ".format(diff_str))
         choice = choice.lower()
 
     return choice
