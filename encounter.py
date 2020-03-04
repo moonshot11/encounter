@@ -20,6 +20,8 @@ Useful commands:
                                     Ex: "atk 2 17"
                                     Attack enemy #2 for a total of 17
 
+    hp <enemy id> <value>         - Set enemy's HP to <value>.
+
     dmg <enemy id> <damage total> - Damage the enemy by the amount provided.
                                     YOU ARE RESPONSIBLE FOR ALL MODIFIERS AND
                                     RESISTANCE. This program does not account
@@ -573,6 +575,20 @@ def loop_game():
                 print("  {} recovered {} HP!".format(enemy.nickname, -delta))
             else:
                 print("  {} took...no damage?".format(enemy.nickname))
+            autosave(enemies)
+            continue
+
+        match = re.search(basic_pattern.format("hp") + "$", choice)
+        if match:
+            uid = int(match.group(1))
+            if uid not in select:
+                print("Enemy #{} does not exist!".format(uid))
+                continue
+            enemy = select[uid]
+            hp = int(match.group(2))
+            enemy.hp = hp
+            enemy.refresh_status()
+            print("  {} HP set!".format(hp))
             autosave(enemies)
             continue
 

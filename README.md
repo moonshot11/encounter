@@ -98,8 +98,12 @@ Attack the enemy specified by the ID. Roll your die, add all modifiers, and prov
 
 - **Damage**: `dmg <enemy id> <damage total>`  
 *Example: Damage enemy 3 for 5 hp:* `dmg 3 5`  
-Damage the enemy. If the enemy dies, you will be told, and the enemy will no longer be displayed. If you accidentally enter too much damage, you can reverse it by dealing "negative" damage. This will revive a dead enemy.  
-You are responsible for all modifiers, resistances, and immunities. This program does not account for attack type.
+Damage the enemy. If the enemy dies, you will be told, and the enemy will no longer be displayed. If you accidentally enter too much damage, you can reverse it by dealing "negative" damage. This will revive a dead enemy. For example, `dmg 3 -999` will restore any SRD creature to max health. Enemy health *can* drop below 0 HP, so you should only use extreme `dmg` values when fully healing a creature.  
+**You are responsible for all modifiers, resistances, and immunities.** This program does not account for attack type.
+
+- **Set health**: `hp <enemy id> <amount>`  
+Example: Set enemy #2's health to 1 HP: `hp 2 1`  
+Set the enemy's health to <value>. Rarely, this is necessary when an enemy must have a specific amount of health (such as a Zombie), and enemy health can go negative in this program.  (Enemy health cannot exceed its maximum, so use `dmg` to restore a monster to full health.)
 
 - **Saving throws**: `<enemy id> sav <dc> <modifiers>`  
 Have an enemy perform a saving throw. The syntax for the modifiers is as follows:  
