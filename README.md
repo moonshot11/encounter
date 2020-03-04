@@ -49,10 +49,12 @@ Let's set up a game with Level 4 and Level 3 players, and create a medium-diffic
 How many players are there? 2
 What is Player 1's level (1-20)? 4
 What is Player 2's level (1-20)? 3
-Choose a difficulty (easy, med, hard, deadly): med
+Choose a difficulty (easy, med, hard, deadly, hell): med
 ```
 
 The game will print the list of monsters. If you are doing everything else by hand, you can stop here. Otherwise, let's keep going!
+
+Note: "hell" is a made-up difficulty not in the DMG. Its XP thresholds are 40% greater than the deadly difficulty.
 
 ```
 Lion x1

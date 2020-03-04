@@ -96,7 +96,7 @@ Less useful commands:
 """
 
 VALID_ABILITIES = ["str", "dex", "con", "int", "wis", "cha"]
-DIFFICULTIES = ["easy", "med", "hard", "deadly"]
+DIFFICULTIES = ["easy", "med", "hard", "deadly", "hell"]
 
 # avg_player_lvl * MULT_MIN_FACTOR to count in encounter multiplier
 MULT_MIN_FACTOR = 0.5
