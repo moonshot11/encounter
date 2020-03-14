@@ -149,6 +149,9 @@ Set up a new encounter. An autosave is created in `_auto.sav` of your current ga
 - **Restart current battle** `restart`  
 Sets all health of every enemy (even if dead) back to full health. Autosaves to `_auto.sav` before resetting.
 
+- **Re-run last command** `last`
+Runs the last command. Useful if you need to do the same saving throw multiple times.
+
 - **Quit** `quit`  
 Save the current game to `_quit.sav` and exit.
 

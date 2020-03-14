@@ -79,6 +79,8 @@ Useful commands:
 
     restart - Set all enemy HP to full. Autosaves current game to _auto.sav
 
+    last - Re-run the previous command
+
     quit - Save the current game to _quit.sav, and exit.
 
     help - You're reading it, silly!
@@ -504,6 +506,7 @@ def loop_game():
 
     enemies = dict()
     select = dict()
+    prev_cmd = None
 
     while True:
         # -- Game startup --
@@ -537,6 +540,11 @@ def loop_game():
         if not choice:
             continue
         print("\n")
+
+        if choice == "last" or choice == ".":
+            choice = prev_cmd
+            print("Re-running:", choice)
+        prev_cmd = choice
 
         basic_pattern = r"^{}\s+(\d+)\s+(-?\d+)"
         match = re.search(basic_pattern.format("atk") + "$", choice)
