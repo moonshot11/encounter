@@ -176,19 +176,19 @@ class Enemy:
 
     def refresh_status(self):
         """Refresh this creature's status text"""
-        GENDER = {
-            "_hisher" : ("his", "her"),
-            "_hishers" : ("his", "hers"),
-            "_heshe" : ("he", "she"),
-            "_himher" : ("him", "her")
-        }
+        GENDER = [
+            ("_hishers", "his", "hers"),
+            ("_hisher", "his", "her"),
+            ("_heshe", "he", "she"),
+            ("_himher", "him", "her")
+        ]
         frac = self.hp / self.template.hp
         for thresh, msgs in STATUSES:
             if frac > thresh:
                 self.status = random.choice(msgs)
-                idx = int(self.sex == "f")
-                for key in GENDER:
-                    self.status = self.status.replace(key, GENDER[key][idx])
+                idx = int(self.sex == "f") + 1
+                for group in GENDER:
+                    self.status = self.status.replace(group[0], group[idx])
                 break
 
 def setup_args():
@@ -539,12 +539,13 @@ def loop_game():
         choice = input("> ").strip().lower()
         if not choice:
             continue
-        print("\n")
 
         if choice == "last" or choice == ".":
             choice = prev_cmd
             print("Re-running:", choice)
         prev_cmd = choice
+
+        print("\n")
 
         basic_pattern = r"^{}\s+(\d+)\s+(-?\d+)"
         match = re.search(basic_pattern.format("atk") + "$", choice)
