@@ -9,6 +9,7 @@ import csv
 import os
 import random
 import re
+import statistics
 import sys
 
 MENU_USAGE = """
@@ -209,6 +210,7 @@ def setup_args():
 def multiply(monster_table, *args):
     """Apply multiplier to xp based on number of enemies"""
     monsters = list(args)
+    avg_lvl = statistics.mean(levels)
     for mon, amt in monster_table.items():
         for i in range(0, amt):
             monsters.append(mon)
@@ -216,8 +218,7 @@ def multiply(monster_table, *args):
         return 0
 
     xp = sum([m.xp for m in monsters])
-    max_cr = max([m.rating for m in monsters])
-    amt = len([m for m in monsters if m.rating > max_cr * MULT_MIN_FACTOR])
+    amt = len([m for m in monsters if m.rating > avg_lvl * MULT_MIN_FACTOR])
 
     if amt <= 1: index = 0
     elif amt == 2: index = 1
@@ -339,7 +340,7 @@ def manual_monsters():
 def random_monsters(args):
     """Generate a monster list"""
     difficulty = setup_players()
-    avg_player_lvl = sum([int(x) for x in levels]) / len(levels)
+    avg_player_lvl = statistics.mean(levels)
 
     monster_templates = templates.copy()
     orc = find_monster(monster_templates, "Orc", error=True)
