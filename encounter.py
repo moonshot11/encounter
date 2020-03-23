@@ -102,9 +102,11 @@ VALID_ABILITIES = ["str", "dex", "con", "int", "wis", "cha"]
 DIFFICULTIES = ["easy", "med", "hard", "deadly", "hell"]
 
 # avg_player_lvl * MULT_MIN_FACTOR to count in encounter multiplier
-MULT_MIN_FACTOR = 0.5
+MULT_MIN_FACTOR = 0.75
 # min percentage for this monster's contribution to remaining XP
-NEXT_FLOOR = 0.1
+INIT_NEXT_FLOOR = 0.3
+# After first enemy is picked, soften requirement
+MINION_NEXT_FLOOR = 0.1
 
 levels = list()
 templates = None
@@ -339,6 +341,7 @@ def manual_monsters():
 
 def random_monsters(args):
     """Generate a monster list"""
+    next_floor = INIT_NEXT_FLOOR
     difficulty = setup_players()
     avg_player_lvl = statistics.mean(levels)
 
@@ -363,8 +366,18 @@ def random_monsters(args):
             # Populate candidates and choose who's next
             candidates = []
             for mon in monster_templates:
+                # XP delta with this mon added
+                mon_xp = multiply(result, mon) - multiply(result)
+                # Minimum XP for this mon to be considered
+                # (Remaining XP) * next_floor
+                min_mon_xp = (target_xp_ceil - multiply(result)) * next_floor
+
+                # If mon XP is small enough to fit in remaining XP,
+                # and large enough to meet minimum requirement,
+                # and CR is less than avg player's level,
+                # and check if rating == 0
                 if multiply(result, mon) <= target_xp_ceil and \
-                   multiply(result, mon) - multiply(result) >= (target_xp_ceil - multiply(result)) * NEXT_FLOOR and \
+                   mon_xp >= min_mon_xp and \
                    mon.rating <= avg_player_lvl and \
                   (mon.rating > 0 or args.use_zero):
                     candidates.append(mon)
@@ -390,6 +403,8 @@ def random_monsters(args):
             monster_count += 1
             if multiply(result, winner) > target_xp_ceil:
                 break
+
+        next_floor = MINION_NEXT_FLOOR
  
     print()
     total = 0
