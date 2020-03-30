@@ -1,0 +1,12 @@
+# (Avg player level) * (MULT_MIN_FACTOR) = floor for counting
+# monster figuring out monster total for XP difficulty multiplier
+# Default: 0.75
+MULT_MIN_FACTOR 0.75
+
+# Minimum percentage of remaining XP to find next monster candidate
+# Default: 0.3
+INIT_FILTER_FLOOR 0.3
+
+# After first enemy is picked, soften requirement
+# Default: 0.1
+NEXT_FILTER_FLOOR 0.1

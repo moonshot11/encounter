@@ -12,6 +12,8 @@ import re
 import statistics
 import sys
 
+from types import SimpleNamespace
+
 MENU_USAGE = """
 Useful commands:
 
@@ -101,19 +103,18 @@ Less useful commands:
 VALID_ABILITIES = ["str", "dex", "con", "int", "wis", "cha"]
 DIFFICULTIES = ["easy", "med", "hard", "deadly", "hell"]
 
-# avg_player_lvl * MULT_MIN_FACTOR to count in encounter multiplier
-MULT_MIN_FACTOR = 0.75
-# min percentage for this monster's contribution to remaining XP
-INIT_NEXT_FLOOR = 0.3
-# After first enemy is picked, soften requirement
-MINION_NEXT_FLOOR = 0.1
-
 levels = list()
 templates = None
 DEBUG = False
 SHOW_HOW = True
 SHOW_SPEED = False
 SHOW_DEAD = False
+
+settings = SimpleNamespace(**{
+    "MULT_MIN_FACTOR" : None,
+    "INIT_FILTER_FLOOR" : None,
+    "NEXT_FILTER_FLOOR" : None
+})
 
 cr_to_xp = {
     0 : 10,
@@ -220,7 +221,8 @@ def multiply(monster_table, *args):
         return 0
 
     xp = sum([m.xp for m in monsters])
-    amt = len([m for m in monsters if m.rating > avg_lvl * MULT_MIN_FACTOR])
+    amt = len([m for m in monsters
+               if m.rating > avg_lvl * settings.MULT_MIN_FACTOR])
 
     if amt <= 1: index = 0
     elif amt == 2: index = 1
@@ -341,7 +343,7 @@ def manual_monsters():
 
 def random_monsters(args):
     """Generate a monster list"""
-    next_floor = INIT_NEXT_FLOOR
+    next_floor = settings.INIT_FILTER_FLOOR
     difficulty = setup_players()
     avg_player_lvl = statistics.mean(levels)
 
@@ -404,7 +406,7 @@ def random_monsters(args):
             if multiply(result, winner) > target_xp_ceil:
                 break
 
-        next_floor = MINION_NEXT_FLOOR
+        next_floor = settings.NEXT_FILTER_FLOOR
  
     print()
     total = 0
@@ -812,8 +814,28 @@ def setup_players():
 
     return choice
 
+def init_config(filename):
+    """Initialize settings"""
+    # Read file
+    with open(filename, "r") as fin:
+        lines = [ln.strip() for ln in fin.readlines()]
+
+    # Scan lines
+    for line in lines:
+        match = re.search(r"^\s*(\w+)\s+([\d.]+)\s*$", line)
+        if not match or not hasattr(settings, match.group(1)):
+            continue
+        setattr(settings, match.group(1), float(match.group(2)))
+
+    # Verify that everything was initialized
+    for k, v in vars(settings).items():
+        if v is None:
+            print("ERROR: setting {} not initialized!".format(k))
+            sys.exit(1)
+
 if __name__ == "__main__":
     args = setup_args()
+    init_config("settings.txt")
     templates = init_data(args.monster_data)
     init_status("status.txt")
     loop_game()
