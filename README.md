@@ -140,20 +140,21 @@ Toggles whether to show dead enemies. By default, they are not displayed in the 
 - **Load/save**  
 `load <filename>`  
 `save <filename>`  
-Load or save to a file, e.g. `save game1.txt`. You can call the files whatever you like, but they are stored as text files and can be open in Notepad. If you don't want to see each enemy's HP, don't open this file!  
-When you load a game, the previous game is saved in `_load.sav`.
+Load or save to a file, e.g. `save game1`. You can call the files whatever you like, but they are stored as text files and can be open in Notepad. If you don't want to see each enemy's HP, don't open this file!  
+Games are loaded and saved by providing **only** the filename (`load game1`), and the program fills in the rest ("saves/game1.sav").  
+When you load a game, the previous game is saved in `saves/_load.sav`.
 
 - **Start a new game** `newgame`  
-Set up a new encounter. An autosave is created in `_auto.sav` of your current game in before starting a new one.
+Set up a new encounter. An autosave is created in `saves/_auto.sav` of your current game in before starting a new one.
 
 - **Restart current battle** `restart`  
-Sets all health of every enemy (even if dead) back to full health. Autosaves to `_auto.sav` before resetting.
+Sets all health of every enemy (even if dead) back to full health. Autosaves to `saves/_auto.sav` before resetting.
 
 - **Re-run last command** `last`
 Runs the last command. Useful if you need to do the same saving throw multiple times.
 
 - **Quit** `quit`  
-Save the current game to `_quit.sav` and exit.
+Save the current game to `saves/_quit.sav` and exit.
 
 - **Help** `help`  
 Display this information in-game.

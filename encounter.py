@@ -148,6 +148,7 @@ cr_to_xp = {
 }
 
 STATUSES = list()
+SAVE_PATH = "saves"
 
 class Monster:
     """A generic monster template with all static stat info"""
@@ -426,6 +427,7 @@ def random_monsters(args):
 
 def load_game(filename):
     """Load game from a save file"""
+    filename = save_path(filename)
     result = []
     template = None
     nickname = None
@@ -457,6 +459,7 @@ def load_game(filename):
 
 def save_game(filename, enemies, silent=False):
     """Save game to file"""
+    filename = save_path(filename)
     if not silent:
         print("Saving to {}...".format(filename))
     lines = []
@@ -472,6 +475,12 @@ def save_game(filename, enemies, silent=False):
             lines.append("#:{}\n\n".format(enemy))
     with open(filename, "w") as fout:
         fout.writelines(lines)
+
+def save_path(filename):
+    """Initialize and return save path"""
+    if not os.path.isdir(SAVE_PATH):
+        os.mkdir(SAVE_PATH)
+    return os.path.join(SAVE_PATH, filename + ".sav")
 
 def input_int(msg, sign=False):
     """Prompt for an int (no sign)"""
@@ -516,7 +525,7 @@ def init_enemies(monsters_count):
 def loop_game():
     """Play the game!"""
     def autosave(enemies):
-        save_game("_auto.sav", enemies, silent=True)
+        save_game("_auto", enemies, silent=True)
     global DEBUG
     global SHOW_HOW
     global SHOW_SPEED
@@ -686,10 +695,10 @@ def loop_game():
             if choice[4:].strip():
                 filename = choice[4:].strip()
             else:
-                filename = "_save.sav"
+                filename = "_save"
             save_game(filename, enemies)
         elif choice == "quit":
-            save_game("_quit.sav", enemies)
+            save_game("_quit", enemies)
             print("Quitting...")
             return
         elif choice == "bail":
@@ -701,7 +710,7 @@ def loop_game():
                 print("Cannot load file:", filename)
                 continue
             temp_enemies = load_game(filename)
-            save_game("_load.sav", enemies)
+            save_game("_load", enemies)
             enemies = temp_enemies
             select.clear()
         elif choice == "debug":
@@ -781,7 +790,7 @@ def startup_prompt():
     elif choice == "l":
         while True:
             loadfile = input("Enter file to load: ").strip()
-            if not os.path.isfile(loadfile):
+            if not os.path.isfile(save_path(loadfile)):
                 print("Cannot open file")
                 continue
             enemies = load_game(loadfile)
