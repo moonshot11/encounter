@@ -817,10 +817,19 @@ def setup_players():
             levels.append(lvl)
             break
 
-    while choice not in DIFFICULTIES:
-        diff_str = ", ".join(DIFFICULTIES)
+    diff_str = ", ".join(DIFFICULTIES)
+    while choice not in DIFFICULTIES and choice != "rand":
         choice = input("Choose a difficulty ({}): ".format(diff_str))
         choice = choice.lower()
+
+    if choice == "rand":
+        droll = random.randint(1, 20)
+        if droll <= 4:
+            choice = "easy"
+        elif droll == 19:
+            choice = "hard"
+        else:
+            choice = "med"
 
     return choice
 
