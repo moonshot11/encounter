@@ -138,6 +138,7 @@ cr_to_xp = {
     15 : 13300,
     16 : 15000,
     17 : 18000,
+    18 : 20000,
     19 : 22000,
     20 : 25000,
     21 : 33000,
@@ -205,7 +206,7 @@ def setup_args():
     parser.add_argument("--orcs", help="Require orcs", action="store_true")
     parser.add_argument("--use-zero", action="store_true",
             help="Use 0 CR monsters")
-    parser.add_argument("--monster-data", default="srd.csv",
+    parser.add_argument("--monster-data", default="srd",
             help="The data file with monster information")
 
     args = parser.parse_args()
@@ -845,6 +846,6 @@ def init_config(filename):
 if __name__ == "__main__":
     args = setup_args()
     init_config("settings.txt")
-    templates = init_data(args.monster_data)
+    templates = init_data(os.path.join("mdata", args.monster_data + ".csv"))
     init_status("status.txt")
     loop_game()
