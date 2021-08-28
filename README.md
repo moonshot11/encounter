@@ -107,10 +107,10 @@ Damage the enemy. If the enemy dies, you will be told, and the enemy will no lon
 Example: Set enemy #2's health to 1 HP: `hp 2 1`  
 Set the enemy's health to <value>. Rarely, this is necessary when an enemy must have a specific amount of health (such as a Zombie), and enemy health can go negative in this program.  (Enemy health cannot exceed its maximum, so use `dmg` to restore a monster to full health.)
 
-- **Saving throws**: `<enemy id> sav <dc> <modifiers>`  
+- **Saving throws**: `<enemy id> sav <modifiers> <dc>`  
 Have an enemy perform a saving throw. The syntax for the modifiers is as follows:  
 `[+/-]<ability>[bonus]`  
-For example:   `3 sav 12 +con+5` - Enemy #3 performs a Constitution saving throw with advantage, and adds +5 to the result.  It checks against a DC 12.
+For example:   `3 sav +con+5 12` - Enemy #3 performs a Constitution saving throw with advantage, and adds +5 to the result.  It checks against a DC 12.
 See the section below on saving throws for more detail on this command.
 
 ### Display commands
@@ -163,7 +163,7 @@ Display this information in-game.
 
 Saving throw commands work as follows:
 
-`<enemy id> sav <dc> <modifiers>`
+`<enemy id> sav <modifiers> <dc>`
 
 Example modifiers:
 
@@ -183,7 +183,7 @@ The `+` and `-` at the start represent advantage and disadvantage, with the numb
  2) Merfolk [red] ... is radiating energy after eating 20 protein bars!
  3) Merfolk [blue] ... is having a wonderful day
  -) Player 2
-> 2 sav 12 wis+3
+> 2 sav wis+3 12
 
 
 === Saved! ===

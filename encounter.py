@@ -32,7 +32,7 @@ Useful commands:
                                     Ex: "dmg 3 12"
                                     Damage enemy #3 for 12 HP.
 
-    <enemy id> sav <dc> <mods> - Have an enemy perform a saving throw. The
+    <enemy id> sav <mods> <dc> - Have an enemy perform a saving throw. The
                                  syntax of a saving throw is as follows:
 
                                  [+/-]<abilities>
@@ -46,23 +46,23 @@ Useful commands:
 
                                  Examples:
 
-                                 3 sav 12 con - Enemy #3 performs a Constitution
+                                 3 sav con 12 - Enemy #3 performs a Constitution
                                                 saving throw of DC 12.
 
-                                 5 sav 9 +dex - Enemy #5 performs a Dexterity
+                                 5 sav +dex 9 - Enemy #5 performs a Dexterity
                                                 saving throw of DC 9 with
                                                 advantage.
 
-                                 4 sav 15 str+4 - Enemy #4 performs a Strength
+                                 4 sav str+4 15 - Enemy #4 performs a Strength
                                                   saving throw of DC 15, with
                                                   a +4 bonus to his roll.
 
-                                 2 sav 8 -wis+1 - Enemy #2 performs a Wisdom
+                                 2 sav -wis+1 8 - Enemy #2 performs a Wisdom
                                                   saving throw of DC 8, with
                                                   disadvantage on the roll and
                                                   a +1 bonus to the total.
 
-                                1 sav 12 str+1/dex+0 - Perform a saving throw
+                                1 sav str+1/dex+0 12 - Perform a saving throw
                                                        on STR or DEX, whichever
                                                        has the higher ability
                                                        score.
@@ -628,15 +628,15 @@ def loop_game():
             autosave(enemies)
             continue
 
-        match = re.search(r"(\d+)\s+sav\s+(-?\d+)\s+([\w+-/]+)$", choice)
+        match = re.search(r"(\d+)\s+sav\s+([\w+-/]+)\s+(-?\d+)$", choice)
         if match:
             uid = int(match.group(1))
             if uid not in select:
                 print("Enemy #{} does not exist!".format(uid))
                 continue
             enemy = select[uid]
-            dc = int(match.group(2))
-            check_str = match.group(3)
+            check_str = match.group(2)
+            dc = int(match.group(3))
 
             # Pull out details of saving throw
             match = re.match(r"([-+])?([-+a-zA-Z/\d]+)?", check_str)
