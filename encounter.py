@@ -116,6 +116,12 @@ settings = SimpleNamespace(**{
     "NEXT_FILTER_FLOOR" : None
 })
 
+# Environments to pull from
+valid_envs = set()
+envs = set()
+# Base monster to require (often orcs)
+base_monster = None
+
 cr_to_xp = {
     0 : 10,
     0.125 : 25,
@@ -160,6 +166,7 @@ class Monster:
         self.ac = int(ac)
         self.hp = int(hp)
         self.speed = speed
+        self.envs = list()
 
         (self.str, self.dex, self.con, self.int, self.wis, self.cha) = \
         tuple([int(s) for s in stats])
@@ -206,7 +213,7 @@ def setup_args():
     parser.add_argument("--orcs", help="Require orcs", action="store_true")
     parser.add_argument("--use-zero", action="store_true",
             help="Use 0 CR monsters")
-    parser.add_argument("--monster-data", default="srd",
+    parser.add_argument("--monster-data", default="mm",
             help="The data file with monster information")
 
     args = parser.parse_args()
@@ -265,7 +272,7 @@ def ability_to_mod(value):
 def find_monster(monsters, name, error=False):
     """Return first Monster item with name"""
     for mon in monsters:
-        if mon.name == name:
+        if mon.name.lower() == name.lower():
             return mon
     if error:
         print("ERROR: Could not find", name)
@@ -279,11 +286,19 @@ def init_data(filename):
     with open(filename, "r") as fin:
         reader = csv.DictReader(fin)
         for line in reader:
-            monsters.append(Monster(
+            monster = Monster(
                  line['Name'], line['CR'],
                  line['AC'], line['HP'], line['Speeds'],
                 [line['STR'], line['DEX'], line['CON'],
-                 line['INT'], line['WIS'], line['CHA']]))
+                 line['INT'], line['WIS'], line['CHA']])
+            envs = list()
+            for k,v in line.items():
+                if k.startswith("Env ") and v == "x":
+                    env = k[4:].lower()
+                    valid_envs.add(env)
+                    envs.append(env)
+            monster.envs = envs
+            monsters.append(monster)
 
     return monsters
 
@@ -538,7 +553,7 @@ def loop_game():
 
     while True:
         # -- Game startup --
-        if not enemies:
+        while not enemies:
             enemies = startup_prompt()
             select.clear()
             idx = 1
@@ -759,45 +774,81 @@ def init_status(filename):
         STATUSES.append( (0, curr) )
 
 
+def settings_loop():
+    """Display and print settings"""
+    global envs
+    global base_monster
+
+    while True:
+        print()
+        print("Envs:", envs or "")
+        print("Base monster:", base_monster or "")
+        print()
+        choice = input("Modify (e)nvironment, (B)ase monster, or (R)eturn? ")
+        choice = choice.lower().strip()
+
+        if choice in ("e", "environment"):
+            print("Enter environment name (-env clears one, -- clears all)")
+            choice = input("? ").lower().strip()
+            if choice in valid_envs:
+                envs.add(choice)
+            elif choice.startswith("-") and choice[1:] in envs:
+                envs.remove(choice[1:])
+            elif choice == "--":
+                envs.clear()
+            else:
+                print("Env not valid!")
+        elif choice in ("b", "base"):
+            choice == "b"
+            choice = input("Enter monster (-- to clear): ").lower().strip()
+            if find_monster(templates, choice):
+                base_monster = find_monster(templates, choice).name
+            elif choice.startswith("--"):
+                base_monster = None
+
+        elif choice in ("r", "return"):
+            return
+        else:
+            print("I didn't understand that")
+            continue
+
+
 def startup_prompt():
     """Prompt user for initial info"""
     print()
     print("~~~ Welcome to Encounter! ~~~")
     print()
     choice = None
-    while not choice:
-        choice = input("(R)andomize monsters, (C)hoose your own, or (L)oad a save file? ")
+    enemies = None
+    while True:
+        choice = input("(R)andomize monsters, (C)hoose your own, (S)ettings, (L)oad a save? ")
         choice = choice.strip().lower()
         if not choice:
             continue
         if choice in ("l", "load"):
-            choice = "l"
+            while True:
+                loadfile = input("Enter file to load: ").strip()
+                if not os.path.isfile(save_path(loadfile)):
+                    print("Cannot open file")
+                    continue
+                enemies = load_game(loadfile)
+                break
         elif choice in ("c", "choose"):
-            choice = "c"
+            monster_count = manual_monsters()
+            enemies = init_enemies(monster_count)
         elif choice in ("r", "random", "randomize"):
-            choice = "r"
+            monster_count = random_monsters(args)
+            enemies = init_enemies(monster_count)
+        elif choice in ("s", "settings"):
+            settings_loop()
         elif choice in ("q", "quit", "exit"):
             sys.exit(0)
         else:
             print("I did not recognize that.")
             choice = None
 
-    if choice == "c":
-        monster_count = manual_monsters()
-        enemies = init_enemies(monster_count)
-    elif choice == "r":
-        monster_count = random_monsters(args)
-        enemies = init_enemies(monster_count)
-    elif choice == "l":
-        while True:
-            loadfile = input("Enter file to load: ").strip()
-            if not os.path.isfile(save_path(loadfile)):
-                print("Cannot open file")
-                continue
-            enemies = load_game(loadfile)
-            break
-
-    return enemies
+        if enemies:
+            return enemies
 
 def setup_players():
     """Setup players and return difficulty"""
