@@ -166,7 +166,7 @@ class Monster:
         self.ac = int(ac)
         self.hp = int(hp)
         self.speed = speed
-        self.envs = list()
+        self.envs = set()
 
         (self.str, self.dex, self.con, self.int, self.wis, self.cha) = \
         tuple([int(s) for s in stats])
@@ -210,7 +210,6 @@ def setup_args():
 
     parser.add_argument("--max-per-group", "-m", default=4, type=int,
             help="Max amt per group")
-    parser.add_argument("--orcs", help="Require orcs", action="store_true")
     parser.add_argument("--use-zero", action="store_true",
             help="Use 0 CR monsters")
     parser.add_argument("--monster-data", default="mm",
@@ -291,13 +290,12 @@ def init_data(filename):
                  line['AC'], line['HP'], line['Speeds'],
                 [line['STR'], line['DEX'], line['CON'],
                  line['INT'], line['WIS'], line['CHA']])
-            envs = list()
+            envs = set()
             for k,v in line.items():
                 if k.startswith("Env ") and v == "x":
                     env = k[4:].lower()
                     valid_envs.add(env)
-                    envs.append(env)
-            monster.envs = envs
+                    monster.envs.add(env)
             monsters.append(monster)
 
     return monsters
@@ -365,50 +363,58 @@ def random_monsters(args):
     avg_player_lvl = statistics.mean(levels)
 
     monster_templates = templates.copy()
-    orc = find_monster(monster_templates, "Orc", error=True)
     target_xp_flr = calc_target_xp(difficulty)
     target_xp_ceil = target_xp_flr * 1.1
 
     result = {}
     xp_total = 0
     monster_count = 0
+    # Adjust minimum xp if no elegible monsters
+    min_adj = 0
 
     while not (target_xp_flr < multiply(result) and
                multiply(result) <= target_xp_ceil):
-        # Add Orcs if specifically required
-        if not result and args.orcs:
-            winner = orc
+        # Minimum XP for this mon to be considered
+        # (Remaining XP) * next_floor
+        min_mon_xp = (target_xp_ceil - multiply(result)) * next_floor - min_adj
+        # Add base_monster if provided
+        if not result and base_monster:
+            winner = base_monster
             amt = random.randint(2, 8)
             if target_xp_ceil < winner.xp:
-                print("WARNING: Orcs too difficult for this group")
+                print(f"WARNING: {base_monster.name}s too difficult for this group")
         else:
             # Populate candidates and choose who's next
             candidates = []
             for mon in monster_templates:
                 # XP delta with this mon added
                 mon_xp = multiply(result, mon) - multiply(result)
-                # Minimum XP for this mon to be considered
-                # (Remaining XP) * next_floor
-                min_mon_xp = (target_xp_ceil - multiply(result)) * next_floor
 
                 # If mon XP is small enough to fit in remaining XP,
                 # and large enough to meet minimum requirement,
                 # and CR is less than avg player's level,
-                # and check if rating == 0
+                # and check if 0 CR is allowed
+                # and check if envs are restricted
                 if multiply(result, mon) <= target_xp_ceil and \
                    mon_xp >= min_mon_xp and \
                    mon.rating <= avg_player_lvl and \
-                  (mon.rating > 0 or args.use_zero):
+                   (mon.rating > 0 or args.use_zero) and \
+                   bool(not envs or envs.intersection(mon.envs)):
                     candidates.append(mon)
             # If no available creatures, bail
             if not candidates:
-                if args.use_zero:
-                    print("No more candidates - exiting")
-                    break
-                else:
+                if min_mon_xp > 0:
+                    min_adj += 100
+                    continue
+                elif not args.use_zero:
                     print("Adding 0 CR monsters to pool")
                     args.use_zero = True
+                    min_adj = 0
                     continue
+                else:
+                    print("No more candidates - exiting")
+                    break
+            min_adj = 0
             winner = random.choice(candidates)
             amt = random.randint(1, args.max_per_group)
 
@@ -782,7 +788,7 @@ def settings_loop():
     while True:
         print()
         print("Envs:", envs or "")
-        print("Base monster:", base_monster or "")
+        print("Base monster:", getattr(base_monster, "name", ""))
         print()
         choice = input("Modify (e)nvironment, (B)ase monster, or (R)eturn? ")
         choice = choice.lower().strip()
@@ -802,7 +808,7 @@ def settings_loop():
             choice == "b"
             choice = input("Enter monster (-- to clear): ").lower().strip()
             if find_monster(templates, choice):
-                base_monster = find_monster(templates, choice).name
+                base_monster = find_monster(templates, choice)
             elif choice.startswith("--"):
                 base_monster = None
 
