@@ -306,10 +306,7 @@ def manual_monsters():
     # Item: (monster, count)
     monster_count = dict()
 
-    amt_players = 0
-    while amt_players < 1:
-        amt_players = input_int("How many players are there? ")
-    levels = [None] * amt_players
+    setup_players(difficulty=False)
 
     while True:
         print()
@@ -856,7 +853,7 @@ def startup_prompt():
         if enemies:
             return enemies
 
-def setup_players():
+def setup_players(difficulty=True):
     """Setup players and return difficulty"""
     global levels
     levels.clear()
@@ -873,6 +870,10 @@ def setup_players():
                 lvl = input_int("What is Player {}'s level (1-20)? ".format(i+1))
             levels.append(lvl)
             break
+
+
+    if not difficulty:
+        return None
 
     diff_str = ", ".join(DIFFICULTIES)
     while choice not in DIFFICULTIES and choice != "rand":
