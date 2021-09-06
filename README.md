@@ -156,6 +156,9 @@ Runs the last command. Useful if you need to do the same saving throw multiple t
 - **Quit** `quit`  
 Save the current game to `saves/_quit.sav` and exit.
 
+- **XP** `xp`  
+Print the total XP of the current encounter.
+
 - **Help** `help`  
 Display this information in-game.
 

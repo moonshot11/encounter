@@ -84,6 +84,8 @@ Useful commands:
 
     last - Re-run the previous command
 
+    xp   - Print the total XP for this encounter
+
     quit - Save the current game to _quit.sav, and exit.
 
     help - You're reading it, silly!
@@ -109,6 +111,8 @@ DEBUG = False
 SHOW_HOW = True
 SHOW_SPEED = False
 SHOW_DEAD = False
+
+exp = 0
 
 settings = SimpleNamespace(**{
     "MULT_MIN_FACTOR" : None,
@@ -314,6 +318,9 @@ def manual_monsters():
         for i, mon in enumerate(mons_by_name):
             amt = monster_count[mon]
             print("{}) {} x{}".format(i+1, mon.name, amt))
+        global exp
+        exp = multiply(monster_count)
+        print(exp, "XP")
         print()
 
         print("Commands:")
@@ -437,7 +444,9 @@ def random_monsters(args):
         count += amt
     print()
 
-    print(multiply(result), "XP")
+    global exp
+    exp = multiply(result)
+    print(exp, "XP")
     if DEBUG:
         print(target_xp_flr, "XP <-- target")
         print(target_xp_ceil, "XP <-- target")
@@ -474,6 +483,11 @@ def load_game(filename):
             enemy = Enemy(template, nickname, hp=hp, status=status, sex=sex)
             result.append(enemy)
 
+        # Set XP
+        elif line.startswith("XP: "):
+            global exp
+            exp = int(line[4:])
+
     return result
 
 def save_game(filename, enemies, silent=False):
@@ -482,6 +496,8 @@ def save_game(filename, enemies, silent=False):
     if not silent:
         print("Saving to {}...".format(filename))
     lines = []
+    lines.append(f"XP: {exp}\n")
+    lines.append("\n")
     for enemy in enemies:
         if isinstance(enemy, Enemy):
             lines.append("Template: {}\n".format(enemy.template.name))
@@ -746,6 +762,8 @@ def loop_game():
             SHOW_SPEED = not SHOW_SPEED
         elif choice == "dead":
             SHOW_DEAD = not SHOW_DEAD
+        elif choice == "xp":
+            print(exp, "XP")
         elif choice == "newgame":
             autosave(enemies)
             enemies.clear()
@@ -844,6 +862,9 @@ def startup_prompt():
                 break
         elif choice in ("c", "choose"):
             monster_count = manual_monsters()
+            global exp
+            exp = multiply(monster_count)
+            print(exp, "XP")
             enemies = init_enemies(monster_count)
         elif choice in ("r", "random", "randomize"):
             monster_count = random_monsters(args)
