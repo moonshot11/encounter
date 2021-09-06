@@ -525,15 +525,21 @@ def init_enemies(monsters_count):
     for mon in monsters_count:
         inits.append( (mon, random.randint(1, 20) + ability_to_mod(mon.dex)) )
     inits.sort(key=lambda x: x[1], reverse=True)
-    colors = ["red", "blue", "green", "orange", "purple", "pink", "yellow"]
+    colors_raw = ["red", "blue", "green", "orange", "purple", "pink", "yellow"]
+    colors = colors_raw.copy()
+    for x, c1 in enumerate(colors_raw):
+        for y, c2 in enumerate(colors_raw):
+            if y > x:
+                colors.append(f"{colors[x]}-{colors[y]}")
+
     for mon, init in inits:
         if mon in monsters_count:
             count = 0
             amt = monsters_count[mon]
             for i in range(amt):
                 nickname = mon.name
-                if amt > 1 and count < len(colors):
-                    nickname += " [{}]".format(colors[count])
+                if amt > 1:
+                    nickname += f" [{colors[i]}]"
                 enemies.append(Enemy(mon, nickname))
                 count += 1
         else:
