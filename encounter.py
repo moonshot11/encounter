@@ -343,14 +343,15 @@ def manual_monsters():
             print("{}) {} x{}".format(i+1, mon.name, amt))
         global exp
         exp = multiply(monster_count).adj
-        calc_target_xp(None, print_all=True)
-        print(exp, "XP")
+        print()
+        print(exp, "adjusted XP")
         print()
 
         print("Commands:")
         print("  set   (set the amount of a monster; add to list if necessary)")
         print("  del   (delete this entry from list)")
-        print("  clear (clears all monsters from list, be careful!)")
+        print("  clear (clear all monsters from list - be careful!)")
+        print("  info  (print xp info)")
         print("  done")
         print()
 
@@ -376,6 +377,8 @@ def manual_monsters():
             del monster_count[mons_by_name[choice-1]]
         elif cmd == "clear":
             monster_count.clear()
+        elif cmd == "info":
+            calc_target_xp(None, print_all=True)
         elif cmd == "done":
             if not monster_count:
                 print("No monsters added! Add a monster first.")
