@@ -112,6 +112,7 @@ SHOW_HOW = True
 SHOW_SPEED = False
 SHOW_DEAD = False
 
+# Encounter XP (NOT difficulty XP)
 exp = 0
 
 settings = SimpleNamespace(**{
@@ -157,6 +158,21 @@ cr_to_xp = {
     24 : 62000,
     30 : 155000
 }
+
+cr_threshold = [
+    # Dummy value to offset list
+    # so item at [1] corresponds
+    # to level 1.
+    None,
+    # levels 1-4
+    0, 0, 0, 0,
+    # levels 5-10
+    1, 1, 2, 3, 4, 4,
+    # levels 11-16
+    5, 6, 7, 8, 9, 9,
+    # levels 17-20
+    10, 11, 12, 13
+]
 
 STATUSES = list()
 SAVE_PATH = "saves"
@@ -225,33 +241,33 @@ def setup_args():
 def multiply(monster_table, *args):
     """Apply multiplier to xp based on number of enemies"""
     monsters = list(args)
-    avg_lvl = statistics.mean(levels)
+    avg_lvl = int(statistics.mean(levels))
     for mon, amt in monster_table.items():
         for i in range(0, amt):
             monsters.append(mon)
     if not monsters:
-        return 0
+        return SimpleNamespace(xp=0, adj=0)
 
     xp = sum([m.xp for m in monsters])
-    amt = len([m for m in monsters
-               if m.rating > avg_lvl * settings.MULT_MIN_FACTOR])
+    amt = len([ m for m in monsters
+                if m.rating >= cr_threshold[avg_lvl] ])
 
-    if amt <= 1: index = 0
-    elif amt == 2: index = 1
-    elif amt in range(3, 7): index = 2
-    elif amt in range(7, 11): index = 3
-    elif amt in range(11, 15): index = 4
-    else: index = 5
+    if amt <= 1: index = 1
+    elif amt == 2: index = 2
+    elif amt in range(3, 7): index = 3
+    elif amt in range(7, 11): index = 4
+    elif amt in range(11, 15): index = 5
+    else: index = 6
     
     if len(levels) <= 2:
         index = min(index + 1, 5)
     elif len(levels) >= 6:
         index = max(index - 1, 0)
 
-    multipliers = [1, 1.5, 2, 2.5, 3, 4]
-    return multipliers[index] * xp
+    multipliers = [0.5, 1, 1.5, 2, 2.5, 3, 4, 5]
+    return SimpleNamespace(xp=xp, adj=multipliers[index] * xp)
 
-def calc_target_xp(difficulty):
+def calc_target_xp(difficulty, print_all=False):
     """Get target XP from table"""
     with open("thresholds.csv", "r") as fin:
         lines = [line.strip() for line in fin.readlines()
@@ -262,9 +278,16 @@ def calc_target_xp(difficulty):
         line = line.split(",")
         targets[int(line[0])] = line[1:]
 
-    total = 0
-    for lvl in levels:
-        total += int(targets[lvl][DIFFICULTIES.index(difficulty)])
+    if print_all:
+        for difficulty in DIFFICULTIES:
+            total = 0
+            for lvl in levels:
+                total += int(targets[lvl][DIFFICULTIES.index(difficulty)])
+            print(f"{difficulty}: {total}")
+    else:
+        total = 0
+        for lvl in levels:
+            total += int(targets[lvl][DIFFICULTIES.index(difficulty)])
 
     return total
 
@@ -319,7 +342,8 @@ def manual_monsters():
             amt = monster_count[mon]
             print("{}) {} x{}".format(i+1, mon.name, amt))
         global exp
-        exp = multiply(monster_count)
+        exp = multiply(monster_count).adj
+        calc_target_xp(None, print_all=True)
         print(exp, "XP")
         print()
 
@@ -376,11 +400,11 @@ def random_monsters(args):
     # Adjust minimum xp if no elegible monsters
     min_adj = 0
 
-    while not (target_xp_flr < multiply(result) and
-               multiply(result) <= target_xp_ceil):
+    while not (target_xp_flr < multiply(result).adj and
+               multiply(result).adj <= target_xp_ceil):
         # Minimum XP for this mon to be considered
         # (Remaining XP) * next_floor
-        min_mon_xp = (target_xp_ceil - multiply(result)) * next_floor - min_adj
+        min_mon_xp = (target_xp_ceil - multiply(result).adj) * next_floor - min_adj
         # Add base_monster if provided
         if not result and base_monster:
             winner = base_monster
@@ -392,14 +416,14 @@ def random_monsters(args):
             candidates = []
             for mon in monster_templates:
                 # XP delta with this mon added
-                mon_xp = multiply(result, mon) - multiply(result)
+                mon_xp = multiply(result, mon).adj - multiply(result).adj
 
                 # If mon XP is small enough to fit in remaining XP,
                 # and large enough to meet minimum requirement,
                 # and CR is less than avg player's level,
                 # and check if 0 CR is allowed
                 # and check if envs are restricted
-                if multiply(result, mon) <= target_xp_ceil and \
+                if multiply(result, mon).adj <= target_xp_ceil and \
                    mon_xp >= min_mon_xp and \
                    mon.rating <= avg_player_lvl and \
                    (mon.rating > 0 or args.use_zero) and \
@@ -430,7 +454,7 @@ def random_monsters(args):
             result[winner] = result.get(winner, 0) + 1
             amt -= 1
             monster_count += 1
-            if multiply(result, winner) > target_xp_ceil:
+            if multiply(result, winner).adj > target_xp_ceil:
                 break
 
         next_floor = settings.NEXT_FILTER_FLOOR
@@ -445,7 +469,7 @@ def random_monsters(args):
     print()
 
     global exp
-    exp = multiply(result)
+    exp = multiply(result).xp
     print(exp, "XP")
     if DEBUG:
         print(target_xp_flr, "XP <-- target")
@@ -863,7 +887,7 @@ def startup_prompt():
         elif choice in ("c", "choose"):
             monster_count = manual_monsters()
             global exp
-            exp = multiply(monster_count)
+            exp = multiply(monster_count).xp
             print(exp, "XP")
             enemies = init_enemies(monster_count)
         elif choice in ("r", "random", "randomize"):
@@ -911,7 +935,7 @@ def setup_players(difficulty=True):
         droll = random.randint(1, 20)
         if droll <= 4:
             choice = "easy"
-        elif droll == 19:
+        elif droll >= 19:
             choice = "hard"
         else:
             choice = "med"
