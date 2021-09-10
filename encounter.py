@@ -238,6 +238,21 @@ def setup_args():
     args = parser.parse_args()
     return args
 
+def daily_xp_quota():
+    """Calculate daily xp quota for party"""
+    # Adventuring Day XP
+    # Adjusted XP per character per day
+    xp_per_day = [
+        None,
+          300,   600,  1200,  1700,  3500,
+         4000,  5000,  6000,  7500,  9000,
+        10500, 11500, 13500, 15000, 18000,
+        20000, 25000, 27000, 30000, 40000
+    ]
+
+    total = sum([xp_per_day[lvl] for lvl in levels])
+    return total
+
 def multiply(monster_table, *args):
     """Apply multiplier to xp based on number of enemies"""
     monsters = list(args)
@@ -337,13 +352,14 @@ def manual_monsters():
 
     while True:
         print()
-        mons_by_name = sorted(monster_count.keys(), key=lambda k: k.name)
-        for i, mon in enumerate(mons_by_name):
-            amt = monster_count[mon]
-            print("{}) {} x{}".format(i+1, mon.name, amt))
+        if monster_count:
+            mons_by_name = sorted(monster_count.keys(), key=lambda k: k.name)
+            for i, mon in enumerate(mons_by_name):
+                amt = monster_count[mon]
+                print("{}) {} x{}".format(i+1, mon.name, amt))
+            print()
         global exp
         exp = multiply(monster_count).adj
-        print()
         print(exp, "adjusted XP")
         print()
 
@@ -351,7 +367,7 @@ def manual_monsters():
         print("  set   (set the amount of a monster; add to list if necessary)")
         print("  del   (delete this entry from list)")
         print("  clear (clear all monsters from list - be careful!)")
-        print("  info  (print xp info)")
+        print("  xp    (print party's xp info)")
         print("  done")
         print()
 
@@ -377,8 +393,11 @@ def manual_monsters():
             del monster_count[mons_by_name[choice-1]]
         elif cmd == "clear":
             monster_count.clear()
-        elif cmd == "info":
+        elif cmd == "xp":
             calc_target_xp(None, print_all=True)
+            quota = daily_xp_quota()
+            print()
+            print("Encounter quota (daily/3):", quota // 3, "XP")
         elif cmd == "done":
             if not monster_count:
                 print("No monsters added! Add a monster first.")
