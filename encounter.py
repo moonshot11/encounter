@@ -116,7 +116,6 @@ SHOW_DEAD = False
 exp = 0
 
 settings = SimpleNamespace(**{
-    "MULT_MIN_FACTOR" : None,
     "INIT_FILTER_FLOOR" : None,
     "NEXT_FILTER_FLOOR" : None
 })
