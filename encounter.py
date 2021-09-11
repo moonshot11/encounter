@@ -35,11 +35,18 @@ Useful commands:
     hp <enemy id> <value>         - Set enemy's HP to <value>.
 
     dmg <enemy id> <damage total> - Damage the enemy by the amount provided.
-                                    YOU ARE RESPONSIBLE FOR ALL MODIFIERS AND
-                                    RESISTANCE. This program does not account
-                                    for enemy resistances.
+        [damage type]               Optionally, provide the damage type. This
+                                    might mean splitting a single attack into
+                                    multiple "dmg" commands, to account for
+                                    different damage types.
                                     Ex: "dmg 3 12"
                                     Damage enemy #3 for 12 HP.
+                                    Ex: "dmg 4 10 fire"
+                                    Damage enemy #4 with adjusted fire damage.
+
+    check <enemy id> <dmg/cond>   - Check whether this enemy has a weakness,
+                                    resistance, or immunity to a given
+                                    damage type or condition.
 
     <enemy id> sav <mods> <dc> - Have an enemy perform a saving throw. The
                                  syntax of a saving throw is as follows:
@@ -821,6 +828,40 @@ def loop_game():
             enemy.refresh_status()
             print("  {} HP set!".format(hp))
             autosave(enemies)
+            continue
+
+        match = re.search(r"^\s*check\s+(\d+)\s+(\w+)\s*$", choice)
+        if match:
+            uid = int(match.group(1))
+            if uid not in select:
+                print("Enemy #{} does not exist!".format(uid))
+                continue
+            token = match.group(2)
+            enemy = select[uid]
+            ALL_TYPES = DMG_TYPES + COND_TYPES
+            types_found = [v for v in ALL_TYPES if v.startswith(token)]
+            if token in types_found:
+                types_found = [token]
+            if len(types_found) > 1:
+                print(f"Token '{token}' ambiguous: {types_found}")
+                continue
+            elif not types_found:
+                print(f"Could not resolve token: {token}")
+                continue
+            else:
+                if token in enemy.template.dmg_mods:
+                    res_class = enemy.template.dmg_mods[token]
+                    if res_class == MOD_IMMUNE:
+                        res_class = "is immune to"
+                    elif res_class == MOD_RESIST:
+                        res_class = "resists"
+                    elif res_class == MOD_VUL:
+                        res_class = "is weak to"
+                    print(enemy.template.name, res_class, token)
+                elif token in enemy.template.cond_mods:
+                    print(f"{enemy.template.name} cannot be {token}")
+                else:
+                    print(f"{enemy.template.name} + {token}: No info")
             continue
 
         match = re.search(r"(\d+)\s+sav\s+([\w+-/]+)\s+(-?\d+)$", choice)
