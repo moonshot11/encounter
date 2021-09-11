@@ -14,6 +14,15 @@ import sys
 
 from types import SimpleNamespace
 
+if hasattr(re, "acc"):
+    raise Exception("re module already has matchobj attribute!")
+re.matchobj = None
+
+def re_search(*args, **kwargs):
+    """Wrapper for re.search()"""
+    re.matchobj = re.search(*args, **kwargs)
+    return re.matchobj
+
 MENU_USAGE = """
 Useful commands:
 
@@ -113,6 +122,55 @@ SHOW_HOW = True
 SHOW_SPEED = False
 SHOW_DEAD = False
 
+DMG_TYPES = [
+    "bludgeoning",
+    "piercing",
+    "slashing",
+    "acid",
+    "cold",
+    "fire",
+    "force",
+    "lightning",
+    "necrotic",
+    "poison",
+    "psychic",
+    "radiant",
+    "thunder",
+
+    "nonmagical",
+    "nonadamantine",
+    "nonsilvered",
+
+    "spell",
+    "magical",
+    "magicalpiercing"
+]
+COND_TYPES = [
+    "blinded",
+    "charmed",
+    "deafened",
+    "exhaustion",
+    "frightened",
+    "grappled",
+    "incapacitated",
+    "invisible",
+    "paralyzed",
+    "petrified",
+    "poisoned",
+    "prone",
+    "restrained",
+    "stunned",
+    "unconscious"
+]
+MOD_IMMUNE = "immu"
+MOD_RESIST = "res"
+MOD_VUL = "weak"
+MOD_VALUES = {
+    MOD_IMMUNE : 0,
+    MOD_RESIST : 0.5,
+    MOD_VUL : 2
+}
+
 # Encounter XP (NOT difficulty XP)
 exp = 0
 
@@ -179,7 +237,7 @@ SAVE_PATH = "saves"
 
 class Monster:
     """A generic monster template with all static stat info"""
-    def __init__(self, name, rating, ac, hp, speed, stats):
+    def __init__(self, name, rating, ac, hp, speed, stats, modline):
         self.name = name
         self.rating = float(rating)
         self.xp = cr_to_xp[self.rating]
@@ -187,9 +245,25 @@ class Monster:
         self.hp = int(hp)
         self.speed = speed
         self.envs = set()
+        self.dmg_mods = dict()
+        self.cond_mods = dict()
 
         (self.str, self.dex, self.con, self.int, self.wis, self.cha) = \
         tuple([int(s) for s in stats])
+
+        # Set damage type modifiers
+        line = modline.lower().replace(" ", "")
+        mods = line.split(",")
+        for moditem in mods:
+            MODS_OR = f"{MOD_VUL}|{MOD_IMMUNE}|{MOD_RESIST}"
+            if re_search(r"^(.+)(" + MODS_OR + r")$", moditem):
+                name, mod = re.matchobj.groups()
+                if name in DMG_TYPES:
+                    self.dmg_mods[name] = mod
+                elif name in COND_TYPES:
+                    self.cond_mods[name] = mod
+                else:
+                    print(f"Did not recognized {name} in {self.name}")
 
 class Enemy:
     """A monster instance with dynamic HP and a nickname"""
@@ -331,7 +405,8 @@ def init_data(filename):
                  line['Name'], line['CR'],
                  line['AC'], line['HP'], line['Speeds'],
                 [line['STR'], line['DEX'], line['CON'],
-                 line['INT'], line['WIS'], line['CHA']])
+                 line['INT'], line['WIS'], line['CHA']],
+                 line['WRI'])
             envs = set()
             for k,v in line.items():
                 if k.startswith("Env ") and v == "x":
@@ -679,15 +754,46 @@ def loop_game():
                 print("=== Miss! ===")
             continue
 
-        match = re.search(basic_pattern.format("dmg") + "$", choice)
+        match = re.search(basic_pattern.format("dmg") + "\s*(\w*)$", choice)
 
         if match:
             uid = int(match.group(1))
+            delta = int(match.group(2))
+            dmg_mod_tokens = match.group(3).lower().split()
+
             if uid not in select:
                 print("Enemy #{} does not exist!".format(uid))
                 continue
+
             enemy = select[uid]
-            delta = int(match.group(2))
+            err_bad_token = False
+            dmg_mods = set()
+            for token in dmg_mod_tokens:
+                types_found = [v for v in DMG_TYPES if v.startswith(token)]
+                if token in types_found:
+                    types_found = [token]
+                if len(types_found) > 1:
+                    print(f"Token '{token}' ambiguous: {types_found}")
+                    err_bad_token = True
+                elif not types_found:
+                    print(f"Could not resolve token: {token}")
+                    err_bad_token = True
+                elif types_found[0] in enemy.template.dmg_mods:
+                    dmg_mods.add(enemy.template.dmg_mods[types_found[0]])
+            if err_bad_token:
+                continue
+            factor = 1
+            for dmg_mod in dmg_mods:
+                factor *= MOD_VALUES[dmg_mod]
+            if factor == 0:
+                print("It didn't seem to have any effect")
+                continue
+            elif 0 < factor < 1:
+                print("It didn't seem very effective")
+            elif factor > 1:
+                print("It seemed particularly effective")
+            delta = int(delta * factor)
+
             enemy.hp -= delta
             enemy.hp = min(enemy.hp, enemy.template.hp)
             enemy.refresh_status()
