@@ -194,6 +194,10 @@ The `+` and `-` at the start represent advantage and disadvantage, with the numb
 
 Since Encounter doesn't know what is being saved, it is up to you to apply all effects and damage.
 
+## Names
+
+Optionally, you can create a file called `names.txt` in the same path as this README. Each line is the name of a party member.  If there are more party members than names in the list, the remaining adventurers will be numbered players as usual.  For example, Alice, Bob, Christina, Player 4, Player 5.
+
 ## Resources
 
 **Character sheets, maps, monster icons\*, and more:**  

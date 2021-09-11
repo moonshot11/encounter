@@ -106,6 +106,7 @@ VALID_ABILITIES = ["str", "dex", "con", "int", "wis", "cha"]
 DIFFICULTIES = ["easy", "med", "hard", "deadly", "hell"]
 
 levels = list()
+names = list()
 templates = None
 DEBUG = False
 SHOW_HOW = True
@@ -580,9 +581,12 @@ def init_enemies(monsters_count):
     inits = list()
     print("\n\nRoll for initiative!")
     for i in range(len(levels)):
-        roll = input_int("What is Player {}'s initiative? ".format(i+1),
-                         sign=True)
-        inits.append( ("Player {}".format(i+1), roll) )
+        if i < len(names):
+            name = names[i]
+        else:
+            name = f"Player {i+1}"
+        roll = input_int(f"What is {name}'s initiative? ", sign=True)
+        inits.append( (name, roll) )
     for mon in monsters_count:
         inits.append( (mon, random.randint(1, 20) + ability_to_mod(mon.dex)) )
     inits.sort(key=lambda x: x[1], reverse=True)
@@ -936,12 +940,11 @@ def setup_players(difficulty=True):
         amt = input_int("How many players are there? ")
     for i in range(amt):
         choice = ""
-        while True:
-            lvl = 0
-            while lvl < 1 or lvl > 20:
-                lvl = input_int("What is Player {}'s level (1-20)? ".format(i+1))
-            levels.append(lvl)
-            break
+        lvl = 0
+        name = names[i] if i < len(names) else f"Player {i+1}"
+        while lvl < 1 or lvl > 20:
+            lvl = input_int(f"What is {name}'s level (1-20)? ".format(i+1))
+        levels.append(lvl)
 
 
     if not difficulty:
@@ -962,6 +965,17 @@ def setup_players(difficulty=True):
             choice = "med"
 
     return choice
+
+def init_names(filename):
+    """Initialize player aliases"""
+    if not os.path.isfile(filename):
+        return
+    with open(filename, "r") as fin:
+        lines = fin.readlines()
+    for line in lines:
+        line = line.strip()
+        if line:
+            names.append(line)
 
 def init_config(filename):
     """Initialize settings"""
@@ -987,4 +1001,5 @@ if __name__ == "__main__":
     init_config("settings.txt")
     templates = init_data(os.path.join("mdata", args.monster_data + ".csv"))
     init_status("status.txt")
+    init_names("names.txt")
     loop_game()
