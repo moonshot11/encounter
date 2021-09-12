@@ -98,10 +98,10 @@ Each time you do damage, an autosave file will be overwritten, called `_auto.sav
 *Example: Attack enemy #2 for a total of 17:* `atk 2 17`    
 Attack the enemy specified by the ID. Roll your die, add all modifiers, and provide the total here.  Output will appear telling you whether your attack was successful.  
 
-- **Damage**: `dmg <enemy id> <damage total> [damage type]`  
+- **Damage**: `dmg <enemy id> <damage total> [(+|-)damage type]`  
 *Example: Damage enemy 3 for 5 hp:* `dmg 3 5`  
 Damage the enemy. If the enemy dies, you will be told, and the enemy will no longer be displayed. If you accidentally enter too much damage, you can reverse it by dealing "negative" damage. This will revive a dead enemy. For example, `dmg 3 -999` will restore any SRD creature to max health. Enemy health *can* drop below 0 HP, so you should only use extreme `dmg` values when fully healing a creature.  
-Optionally, you can provide the damage type (fire, radiant, etc.).  If you do, the damage will be automatically adjusted, and you will get some feedback on how well your attack landed.  Without damage type, the amount provided is always decremented (or incremented) from the enemy's total HP.
+Optionally, you can provide the damage type (fire, radiant, etc.). Use a "+" as the first character for a magical attack, "-" for a nonmagical attack, "$" for a silvered attack, and "@" for an adamantine attack.  If you do, the damage will be automatically adjusted, and you will get some feedback on how well your attack landed.  Without damage type, the amount provided is always decremented (or incremented) from the enemy's total HP.
 
 - **Set health**: `hp <enemy id> <amount>`  
 Example: Set enemy #2's health to 1 HP: `hp 2 1`  

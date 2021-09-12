@@ -35,14 +35,17 @@ Useful commands:
     hp <enemy id> <value>         - Set enemy's HP to <value>.
 
     dmg <enemy id> <damage total> - Damage the enemy by the amount provided.
-        [damage type]               Optionally, provide the damage type. This
+        [[$@+-]<damage type>]       Optionally, provide the damage type. This
                                     might mean splitting a single attack into
                                     multiple "dmg" commands, to account for
-                                    different damage types.
+                                    different damage types. Prepend the type with
+                                    a "+" for magical attacks, "-" for nonmagical
+                                    attacks, "$" for silvered attacks, and "@" for
+                                    adamantine attacks.
                                     Ex: "dmg 3 12"
                                     Damage enemy #3 for 12 HP.
-                                    Ex: "dmg 4 10 fire"
-                                    Damage enemy #4 with adjusted fire damage.
+                                    Ex: "dmg 4 10 +fire"
+                                    Damage enemy #4 with adjusted magical fire damage.
 
     check <enemy id> <dmg/cond>   - Check whether this enemy has a weakness,
                                     resistance, or immunity to a given
@@ -129,10 +132,13 @@ SHOW_HOW = True
 SHOW_SPEED = False
 SHOW_DEAD = False
 
-DMG_TYPES = [
+PHYS_DMG = [
     "bludgeoning",
     "piercing",
-    "slashing",
+    "slashing"
+]
+
+DMG_TYPES = PHYS_DMG + [
     "acid",
     "cold",
     "fire",
@@ -144,13 +150,13 @@ DMG_TYPES = [
     "radiant",
     "thunder",
 
-    "nonmagical",
-    "nonadamantine",
-    "nonsilvered",
+    "nonmagicalnonadamantine",
+    "nonmagicalnonsilvered",
 
-    "spell",
     "magical",
-    "magicalpiercing"
+    "nonmagical",
+    "spell", # Just the archmage
+    "magicalpiercing" # Just the rakshasa
 ]
 COND_TYPES = [
     "blinded",
@@ -761,34 +767,50 @@ def loop_game():
                 print("=== Miss! ===")
             continue
 
-        match = re.search(basic_pattern.format("dmg") + "\s*(\w*)$", choice)
+        match = re.search(basic_pattern.format("dmg") + "\s*([@$+-]*)(\w*)\s*$", choice)
 
         if match:
             uid = int(match.group(1))
             delta = int(match.group(2))
-            dmg_mod_tokens = match.group(3).lower().split()
+            properties = match.group(3)
+            token = match.group(4).lower()
 
             if uid not in select:
                 print("Enemy #{} does not exist!".format(uid))
                 continue
 
             enemy = select[uid]
-            err_bad_token = False
             dmg_mods = set()
-            for token in dmg_mod_tokens:
+
+            magical = "magical" if "+" in properties else "nonmagical"
+
+            if token:
                 types_found = [v for v in DMG_TYPES if v.startswith(token)]
+
+                # If user provides "poison", it should match "poison",
+                # not create unavoidable ambiguity with "poisoned"
                 if token in types_found:
                     types_found = [token]
                 if len(types_found) > 1:
                     print(f"Token '{token}' ambiguous: {types_found}")
-                    err_bad_token = True
+                    continue
                 elif not types_found:
                     print(f"Could not resolve token: {token}")
-                    err_bad_token = True
-                elif types_found[0] in enemy.template.dmg_mods:
-                    dmg_mods.add(enemy.template.dmg_mods[types_found[0]])
-            if err_bad_token:
-                continue
+                    continue
+
+                dmg_type = types_found[0]
+                if dmg_type in enemy.template.dmg_mods:
+                    dmg_mods.add(enemy.template.dmg_mods[dmg_type])
+                elif dmg_type in PHYS_DMG:
+                    if magical and magical in enemy.template.dmg_mods:
+                        dmg_mods.add(enemy.template.dmg_mods[magical])
+                    elif "nonmagicalnonadamantine" in enemy.template.dmg_mods and \
+                            "+" not in properties and "@" not in properties:
+                        dmg_mods.add(enemy.template.dmg_mods["nonmagicalnonadamantine"])
+                    elif "nonmagicalnonsilvered" in enemy.template.dmg_mods and \
+                            "+" not in properties and "$" not in properties:
+                        dmg_mods.add(enemy.template.dmg_mods["nonmagicalnonsilvered"])
+
             factor = 1
             for dmg_mod in dmg_mods:
                 factor *= MOD_VALUES[dmg_mod]
