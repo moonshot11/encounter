@@ -251,7 +251,7 @@ SAVE_PATH = "saves"
 class Monster:
     """A generic monster template with all static stat info"""
     def __init__(self, name, rating, ac, hp, speed, stats, modline):
-        self.name = name
+        self.name = name.strip()
         self.rating = float(rating)
         self.xp = cr_to_xp[self.rating]
         self.ac = int(ac)
@@ -399,10 +399,20 @@ def ability_to_mod(value):
 
 def find_monster(monsters, name, error=False):
     """Return first Monster item with name"""
+    all_results = list()
     for mon in monsters:
+        # Immediately return an exact match
         if mon.name.lower() == name.lower():
             return mon
-    if error:
+        if mon.name.lower().startswith(name.lower()):
+            all_results.append(mon)
+    if len(all_results) == 1:
+        return all_results[0]
+    if len(all_results) > 1:
+        print("Found multiple matching monsters:")
+        for mon in sorted(all_results, key=lambda x: x.name.lower()):
+            print(f"    {mon.name}")
+    if error and len(all_results) != 1:
         print("ERROR: Could not find", name)
         sys.exit(1)
     return None
@@ -468,7 +478,7 @@ def manual_monsters():
             if not mon:
                 print("I couldn't find that monster")
                 continue
-            choice = input_int("How many? ")
+            choice = input_int(f"How many {mon.name}? ")
             monster_count[mon] = choice
         elif cmd == "del":
             if not monster_count:
