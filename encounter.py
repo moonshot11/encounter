@@ -782,8 +782,6 @@ def loop_game():
             enemy = select[uid]
             dmg_mods = set()
 
-            magical = "magical" if "+" in properties else "nonmagical"
-
             if token:
                 types_found = [v for v in DMG_TYPES if v.startswith(token)]
 
@@ -799,6 +797,13 @@ def loop_game():
                     continue
 
                 dmg_type = types_found[0]
+                if "+" in properties:
+                    magical = "magical"
+                elif "-" in properties:
+                    magical = "nonmagical"
+                else:
+                    magical = "nonmagical" if dmg_type in PHYS_DMG else "magical"
+
                 if dmg_type in enemy.template.dmg_mods:
                     dmg_mods.add(enemy.template.dmg_mods[dmg_type])
                 elif dmg_type in PHYS_DMG:
