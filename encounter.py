@@ -86,6 +86,9 @@ Useful commands:
                                                        has the higher ability
                                                        score.
 
+    mf <enemy id> [m|f] - Refresh the status of an enemy,
+                          and optionally change its gender.
+
     how - Toggle whether descriptive statuses are printed.
           On by default.
 
@@ -962,6 +965,19 @@ def loop_game():
                 print("=== Saved! ===")
             else:
                 print("=== Failed! ===")
+            continue
+
+        if re_search(r"^\s*mf\s+(\d+)\s*([mf]?)\s*$", choice):
+            uid = int(re.matchobj.group(1))
+            if uid not in select:
+                print("Enemy #{} does not exist!".format(uid))
+                continue
+            enemy = select[uid]
+            new_gender = re.matchobj.group(2)
+
+            if new_gender:
+                enemy.sex = new_gender
+            enemy.refresh_status()
             continue
 
         # -- Misc commands --
