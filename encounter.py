@@ -1060,7 +1060,7 @@ def settings_loop():
         print("Envs:", envs or "")
         print("Base monster:", getattr(base_monster, "name", ""))
         print()
-        choice = input("Modify (e)nvironment, (B)ase monster, or (R)eturn? ")
+        choice = input("Modify (e)nvironment, (L)ist environments, (B)ase monster, or (R)eturn? ")
         choice = choice.lower().strip()
 
         if choice in ("e", "environment"):
@@ -1074,6 +1074,10 @@ def settings_loop():
                 envs.clear()
             else:
                 print("Env not valid!")
+        elif choice in ("l", "list"):
+            print()
+            for env in sorted(valid_envs):
+                print(env)
         elif choice in ("b", "base"):
             choice == "b"
             choice = input("Enter monster (-- to clear): ").lower().strip()
