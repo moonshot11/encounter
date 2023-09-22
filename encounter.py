@@ -687,9 +687,11 @@ def init_enemies(monsters_count):
         else:
             name = f"Player {i+1}"
         roll = input_int(f"What is {name}'s initiative? ", sign=True)
+        roll += random.random()
         inits.append( (name, roll) )
     for mon in monsters_count:
-        inits.append( (mon, random.randint(1, 20) + ability_to_mod(mon.dex)) )
+        roll = random.randint(1, 20) + ability_to_mod(mon.dex) + random.random()
+        inits.append( (mon, roll) )
     inits.sort(key=lambda x: x[1], reverse=True)
     colors_raw = ["red", "blue", "green", "orange", "purple", "pink", "yellow"]
     colors = colors_raw.copy()
